@@ -117,6 +117,7 @@ celerybeat.pid
 # Environments
 .env
 .venv
+createTrend_django
 env/
 venv/
 ENV/
