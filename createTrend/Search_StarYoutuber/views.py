@@ -25,7 +25,7 @@ def channellist(request):
     paginator.page_size = 10
     queryset = Channel.objects.all()
     for obj in queryset:
-        print(ChannelSubscriber.objects.get(channel_idx=obj.idx).subscriber_num)
+        query2=ChannelSubscriber.objects.get(channel_idx=obj.idx).subscriber_num
     result_page = paginator.paginate_queryset(queryset, request)
     serializer = ChannelInfoSerializer(result_page,many=True)
     return paginator.get_paginated_response(serializer.data)
