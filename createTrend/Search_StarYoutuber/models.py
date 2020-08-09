@@ -130,7 +130,7 @@ class ChannelCategory(models.Model):
 
 
 class ChannelSubscriber(models.Model):
-    channel_idx = models.ForeignKey(Channel, models.DO_NOTHING, db_column='channel_idx')
+    channel_idx = models.ForeignKey(Channel, models.DO_NOTHING, db_column='channel_idx',related_name='channelsubscriber')
     subscriber_num = models.CharField(max_length=50)
     check_time = models.DateTimeField()
     idx = models.AutoField(primary_key=True)
