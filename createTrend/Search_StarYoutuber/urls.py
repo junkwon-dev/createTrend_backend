@@ -6,6 +6,7 @@ from rest_framework.routers import DefaultRouter
 
 urlpatterns = [
     path('channellist/',views.channellist),
+    path('channellist/<int:pk>/',views.channelinfo),
     # path('topkeywords/', views.top),
     # path('topImaging/', views.topImaging),
 ]
