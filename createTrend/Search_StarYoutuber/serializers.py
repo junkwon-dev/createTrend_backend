@@ -42,4 +42,5 @@ class ChannelInfoSerializer(serializers.HyperlinkedModelSerializer):
         fields = ['thumbnail_url', 'channel_description', 'channel_name', 'channel_start_date','videoviews']
         
 class KeywordCountSerializer(serializers.Serializer):
-    keyword = serializers.CharField(max_length=200)
+    name = serializers.CharField(max_length=200)
+    value = serializers.IntegerField()

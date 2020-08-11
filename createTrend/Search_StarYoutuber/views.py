@@ -38,19 +38,22 @@ def channelinfo(request,pk):
         keywords=list(itertools.chain(*keywords))
         counter=collections.Counter(keywords)
         keywords=dict(counter.most_common(n=10))
+        keywords=[{"name":key,"value":keywords[key]} for key in keywords.keys()]
+        print(keywords)
         class Keyword(object):
             def __init__(self,keyword):
-                self.keyword = keyword
-        keywords=Keyword(keyword=keywords)
+                self.name = keyword['name']
+                self.value=keyword['value']
+        keywords=[Keyword(keyword=keyword) for keyword in keywords]
         
         
-        keywordCountSerializer=KeywordCountSerializer(keywords)
+        keywordCountSerializer=KeywordCountSerializer(keywords,many=True)
         topChannelSubscriberSerializer=ChannelSubscriberSerializer(topChannelSubscriber,many=True)
         channelSerializer = ChannelInfoSerializer(channel)
         topViewVideoSerializer=VideoSerializer(topViewVideos,many=True)
         # return Response({'ChannelInfo':channelSerializer.data, 'TopViewVideo':topViewVideoSerializer.data,'Keyword':videoKeywordSerializer.data})
-        return Response({'ChannelInfo':channelSerializer.data, 'TopViewVideo':topViewVideoSerializer.data\
-            ,'TopChannelSubscirber':topChannelSubscriberSerializer.data,'KeywordCount':keywordCountSerializer.data})
+        return Response({'channelInfo':channelSerializer.data, 'video':{"type":"aside","data":topViewVideoSerializer.data}\
+            ,'subscirber':topChannelSubscriberSerializer.data,'keyword':{'pie':keywordCountSerializer.data}})
     
 @api_view(['GET'])
 def channelviewscount(request,pk):
