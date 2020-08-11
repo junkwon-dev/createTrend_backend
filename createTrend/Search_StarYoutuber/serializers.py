@@ -3,7 +3,7 @@ from .models import Channel, ChannelSubscriber, VideoViews, Video, VideoKeyword,
 
 # 사용자 목록
         
-class SubscriberNumberSerializer(serializers.HyperlinkedModelSerializer):
+class ChannelSubscriberSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = ChannelSubscriber
         fields = ['check_time','subscriber_num']
