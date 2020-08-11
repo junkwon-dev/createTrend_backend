@@ -109,11 +109,9 @@ class Channel(models.Model):
     processed = models.BooleanField(blank=True, null=True)
     upload_id = models.CharField(max_length=1000, blank=True, null=True)
     hidden_subscriber = models.BooleanField(blank=True, null=True)
-    topic_ids = models.CharField(max_length=2000, blank=True, null=True)
-    topic_categories = models.CharField(max_length=5000, blank=True, null=True)
     thumbnail_url = models.CharField(max_length=200, blank=True, null=True)
     temp = models.CharField(max_length=100, blank=True, null=True)
-
+    status = models.BooleanField(blank=True, null=True)
     class Meta:
         managed = False
         db_table = 'channel'
@@ -289,7 +287,7 @@ class Video(models.Model):
 
 
 class VideoKeyword(models.Model):
-    video_idx = models.ForeignKey(Video, models.DO_NOTHING, db_column='video_idx')
+    video_idx = models.ForeignKey(Video, models.DO_NOTHING, db_column='video_idx', related_name='videokeyword')
     keyword = models.CharField(max_length=100)
     idx = models.AutoField(primary_key=True)
 
