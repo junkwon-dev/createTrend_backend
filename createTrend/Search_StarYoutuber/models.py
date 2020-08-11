@@ -136,6 +136,15 @@ class ChannelSubscriber(models.Model):
     class Meta:
         managed = False
         db_table = 'channel_subscriber'
+        
+class ChannelViews(models.Model):
+    channel_idx = models.ForeignKey(Channel, models.DO_NOTHING, db_column='channel_idx',related_name='channelviews')
+    view_count = models.IntegerField()
+    check_time = models.DateTimeField()
+    
+    class Meta:
+        managed = False
+        db_table = 'channel_views'
 
 
 class Comment(models.Model):

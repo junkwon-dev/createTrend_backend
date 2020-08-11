@@ -9,10 +9,10 @@ class SubscriberNumberSerializer(serializers.HyperlinkedModelSerializer):
         fields = ['check_time','subscriber_num']
 
 class ChannelListSerializer(serializers.HyperlinkedModelSerializer):  
-    channelsubscriber=SubscriberNumberSerializer(many=True, read_only = True)
+    # channelsubscriber=SubscriberNumberSerializer(many=True, read_only = True)
     class Meta:
         model = Channel
-        fields = ['thumbnail_url', 'channel_description', 'channel_name', 'channel_start_date','channelsubscriber']
+        fields = ['thumbnail_url', 'channel_description', 'channel_name', 'channel_start_date']
 
 class VideoKeywordSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
@@ -36,3 +36,5 @@ class ChannelInfoSerializer(serializers.HyperlinkedModelSerializer):
         model = Channel
         fields = ['thumbnail_url', 'channel_description', 'channel_name', 'channel_start_date','videoviews']
         
+class KeywordCountSerializer(serializers.Serializer):
+    keyword = serializers.CharField(max_length=200)
