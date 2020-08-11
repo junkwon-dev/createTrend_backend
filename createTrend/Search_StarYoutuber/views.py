@@ -64,8 +64,10 @@ def channelviewscount(request,pk):
         end=request.query_params.get('end')
         if(start and end):
             channelviews=channel.channelviews.filter(check_time__range=(start,end))
+            videos=channel.video.filter(check_time__range=(start,end))
+            videoSerializer=VideoSerializer(videos,many=True)
             channelViewsCountSerializer=ChannelViewsCountSerializer(channelviews,many=True)
-            return Response(channelViewsCountSerializer.data)
+            return Response({'ChannelViewsCount':channelViewsCountSerializer.data,'Video':videoSerializer.data})
         else:    
             channelviews=channel.channelviews.all()
             channelViewsCountSerializer=ChannelViewsCountSerializer(channelviews,many=True)
