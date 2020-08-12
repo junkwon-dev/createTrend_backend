@@ -34,7 +34,7 @@ class Video(models.Model):
         db_table = 'video'
                
 class VideoKeywordNew(models.Model):
-    video_idx = models.ForeignKey(Video, models.DO_NOTHING, db_column='video_idx', related_name='videokeyword')
+    video_idx = models.ForeignKey(Video, models.DO_NOTHING, db_column='video_idx', related_name='videokeywordnew')
     keyword = models.CharField(max_length=100)
     idx = models.AutoField(primary_key=True)
 
@@ -52,3 +52,4 @@ class VideoViews(models.Model):
     class Meta:
         managed = False
         db_table = 'video_views'
+
