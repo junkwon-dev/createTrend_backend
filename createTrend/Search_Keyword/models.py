@@ -42,3 +42,13 @@ class VideoKeywordNew(models.Model):
         managed = False
         db_table = 'video_keyword'
         unique_together = (('video_idx', 'keyword'),)
+
+class VideoViews(models.Model):
+    video_idx = models.ForeignKey(Video, models.DO_NOTHING, db_column='video_idx', related_name='videoviews')
+    views = models.IntegerField()
+    check_time = models.DateTimeField()
+    idx = models.AutoField(primary_key=True)
+
+    class Meta:
+        managed = False
+        db_table = 'video_views'
