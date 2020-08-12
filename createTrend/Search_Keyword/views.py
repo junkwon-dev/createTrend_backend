@@ -58,7 +58,7 @@ def keyword(request):
             topVideoSerializer = TopVideoSerializer(topVideo,many=True)
             recentVideoSerializer = RecentVideoSerializer(topVideo,many=True)
             return Response({'video':[{"type":"analysis","data":topVideoSerializer.data},\
-                {"type":"analysis","data":recentVideoSerializer.data}], 'wordmap':{'name':search,'children':keywordCountSerializer.data}}) 
+                {"type":"aside","data":recentVideoSerializer.data}], 'wordmap':{'name':search,'children':keywordCountSerializer.data}}) 
         else:
             paginator = PageNumberPagination()
             paginator.page_size = 10
