@@ -77,13 +77,16 @@ def channelviewscount(request,pk):
             keywords=list(itertools.chain(*keywords))
             counter=collections.Counter(keywords)
             keywords=dict(counter.most_common(n=10))
+            keywords=[{"name":key,"value":keywords[key]} for key in keywords.keys()]
+            print(keywords)
             class Keyword(object):
                 def __init__(self,keyword):
-                    self.keyword = keyword
-            keywords=Keyword(keyword=keywords)
+                    self.name = keyword['name']
+                    self.value=keyword['value']
+            keywords=[Keyword(keyword=keyword) for keyword in keywords]
 
 
-            keywordCountSerializer=KeywordCountSerializer(keywords)
+            keywordCountSerializer=KeywordCountSerializer(keywords,many=True)
             videoSerializer=VideoSerializer(videos,many=True)
             channelSubscriberSerializer=ChannelSubscriberSerializer(channelviews,many=True)
             return Response({'ChannelSubscriber':channelSubscriberSerializer.data,'Video':videoSerializer.data, 'Keyword':keywordCountSerializer.data})
