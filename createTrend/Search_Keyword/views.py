@@ -24,18 +24,15 @@ def keyword(request):
             end=datetime.datetime.now().strftime("%Y-%m-%d")
             topVideo =Video.objects.all()\
                 .filter(videokeywordnew__keyword=search, upload_time__range=(start,end))\
-                .annotate(Max('videoviews__check_time'))\
                 .order_by('-videoviews__views')[:10] 
             recentVideo = Video.objects.all()\
                 .filter(videokeywordnew__keyword=search, upload_time__range=(start,end))\
-                .annotate(Max('videoviews__check_time'))\
-                .order_by('-videoviews__check_time')[:10]  
+                .order_by('-upload_time')[:10]  
             
             # videos = channel.video.all().prefetch_related('videokeyword')
             keywordVideo=Video.objects.all()\
                 .filter(videokeywordnew__keyword=search, upload_time__range=(start,end))\
-                .annotate(Max('videoviews__check_time'))\
-                .order_by('-videoviews__check_time')[:10].prefetch_related('videokeywordnew')  
+                .order_by('-upload_time')[:10].prefetch_related('videokeywordnew')  
             keywords=[]
 
             for video in keywordVideo:
@@ -56,7 +53,7 @@ def keyword(request):
             keywordCountSerializer=KeywordCountSerializer(keywords,many=True)
                         
             topVideoSerializer = TopVideoSerializer(topVideo,many=True)
-            recentVideoSerializer = RecentVideoSerializer(topVideo,many=True)
+            recentVideoSerializer = RecentVideoSerializer(recentVideo,many=True)
             return Response({'video':[{"type":"analysis","data":topVideoSerializer.data},\
                 {"type":"aside","data":recentVideoSerializer.data}], 'wordmap':{'name':search,'children':keywordCountSerializer.data}}) 
         else:
