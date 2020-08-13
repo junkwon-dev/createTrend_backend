@@ -40,7 +40,7 @@ class VideoKeywordNew(models.Model):
 
     class Meta:
         managed = False
-        db_table = 'video_keyword'
+        db_table = 'video_keyword_new'
         unique_together = (('video_idx', 'keyword'),)
 
 class VideoViews(models.Model):

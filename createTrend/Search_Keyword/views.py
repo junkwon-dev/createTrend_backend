@@ -5,7 +5,7 @@ from rest_framework.pagination import PageNumberPagination
 from django.db.models import Max 
 from Search_Keyword.serializers import ChannelListSerializer, VideoKeywordSerializer, TopVideoSerializer\
     ,RecentVideoSerializer, KeywordCountSerializer
-from .models import Channel, VideoKeywordNew, Video
+from .models import Channel, VideoKeywordNew, Video, VideoViews
 from rest_framework.response import Response
 import datetime, itertools, collections
 # from Search_Keyword.serializers import topComment
@@ -22,13 +22,21 @@ def keyword(request):
             start=datetime.datetime.now()-datetime.timedelta(days=14)
             start=start.strftime("%Y-%m-%d")
             end=datetime.datetime.now().strftime("%Y-%m-%d")
-            topVideo =Video.objects.all()\
-                .filter(videokeywordnew__keyword=search, upload_time__range=(start,end))\
-                .order_by('-videoviews__views')[:10] 
+            # topVideo =Video.objects.all()\
+            #     .filter(videokeywordnew__keyword=search, upload_time__range=(start,end))\
+            #     .order_by('-videoviews__views')[:10]
             recentVideo = Video.objects.all()\
                 .filter(videokeywordnew__keyword=search, upload_time__range=(start,end))\
                 .order_by('-upload_time')[:10]  
-            
+            videos = Video.objects.filter(videokeywordnew__keyword=search, upload_time__range=(start,end))\
+                .annotate(hottest_video_made_at=Max('videoviews__check_time')
+                ) 
+            hottest_videos = VideoViews.objects.filter(
+                check_time__in=[v.hottest_video_made_at for v in videos]
+                ).order_by('-views')[:10]
+            topVideo=[]
+            for hv in hottest_videos:
+                topVideo.append(hv.video_idx)
             # videos = channel.video.all().prefetch_related('videokeyword')
             keywordVideo=Video.objects.all()\
                 .filter(videokeywordnew__keyword=search, upload_time__range=(start,end))\
@@ -42,7 +50,7 @@ def keyword(request):
             while search in keywords:
                 keywords.remove(search)
             counter=collections.Counter(keywords)
-            keywords=dict(counter.most_common(n=20))
+            keywords=dict(counter.most_common(n=7))
             keywords=[{"name":key,"value":keywords[key]} for key in keywords.keys()]
             class Keyword(object):
                 def __init__(self,keyword):
