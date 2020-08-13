@@ -26,7 +26,7 @@ def channelinfo(request,pk):
             .order_by('-videoviews__views')[:5]
             
         topChannelSubscriber = channel.channelsubscriber\
-            .order_by('-check_time')[:5]
+            .order_by('-check_time')[:1]
             
         
         videos = channel.video.all().prefetch_related('videokeyword')
@@ -51,9 +51,12 @@ def channelinfo(request,pk):
         topChannelSubscriberSerializer=ChannelSubscriberSerializer(topChannelSubscriber,many=True)
         channelSerializer = ChannelInfoSerializer(channel)
         topViewVideoSerializer=VideoSerializer(topViewVideos,many=True)
+        subscribernum=topChannelSubscriberSerializer.data[0]['subscriber_num']
+        channelinfodict=channelSerializer.data
+        channelinfodict['subscriber']=subscribernum
         # return Response({'ChannelInfo':channelSerializer.data, 'TopViewVideo':topViewVideoSerializer.data,'Keyword':videoKeywordSerializer.data})
-        return Response({'channelInfo':channelSerializer.data, 'video':{"type":"aside","data":topViewVideoSerializer.data}\
-            ,'subscirber':topChannelSubscriberSerializer.data,'keyword':{'pie':keywordCountSerializer.data}})
+        return Response({'channelInfo':channelinfodict, 'video':{"type":"aside","data":topViewVideoSerializer.data}\
+            ,'keyword':{'pie':keywordCountSerializer.data}})
     
 @api_view(['GET'])
 def channelviewscount(request,pk):

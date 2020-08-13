@@ -29,8 +29,7 @@ def keyword(request):
                 .filter(videokeywordnew__keyword=search, upload_time__range=(start,end))\
                 .order_by('-upload_time')[:10]  
             videos = Video.objects.filter(videokeywordnew__keyword=search, upload_time__range=(start,end))\
-                .annotate(hottest_video_made_at=Max('videoviews__check_time')
-                ) 
+                .annotate(hottest_video_made_at=Max('videoviews__check_time')) 
             hottest_videos = VideoViews.objects.filter(
                 check_time__in=[v.hottest_video_made_at for v in videos]
                 ).order_by('-views')[:10]
