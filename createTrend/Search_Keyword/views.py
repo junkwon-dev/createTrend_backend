@@ -2,6 +2,7 @@ from django.shortcuts import render
 from rest_framework import viewsets  
 from rest_framework.decorators import api_view
 from django.utils import timezone
+from datetime import datetime, timedelta
 from rest_framework.pagination import PageNumberPagination
 from django.db.models import Max ,Count, Sum, OuterRef, Subquery
 from Search_Keyword.serializers import ChannelListSerializer, VideoKeywordSerializer, TopVideoSerializer\
@@ -61,24 +62,39 @@ def keyword(request):
             imagingTransition = list(Video.objects.all()\
                 .filter(videokeywordnew__keyword=search, upload_time__range=(start,end))\
                 .extra(select={'date': "TO_CHAR(upload_time, 'YYYY-MM-DD')"}).values('date') \
-                .annotate(value=Count('upload_time')))
+                .annotate(value=Count('idx')))
             popularTranstitionViews = list(Video.objects.all()\
                 .filter(videokeywordnew__keyword=search, upload_time__range=(start,end))\
                 .extra(select={'date': "TO_CHAR(upload_time, 'YYYY-MM-DD')"}).values('date') \
                 .annotate(value=Sum('videoviews__views')))
             popularTranstitionSubscriber = list(Video.objects.all()\
                 .filter(videokeywordnew__keyword=search, upload_time__range=(start,end))\
-                .extra(select={'date': "TO_CHAR(upload_time, 'YYYY-MM-DD')"}).values('date') \
-                .annotate(value=Sum(Subquery(ChannelSubscriber.objects.all().filter(check_time=OuterRef('date'),channel_idx=OuterRef('channel_idx__idx'))))))
+                .extra(select={'date': "TO_CHAR(upload_time, 'YYYY-MM-DD')"}).values('date','channel_idx'))
+            subscribers={}
+            for video in popularTranstitionSubscriber:
+                res = (datetime.datetime.strptime(video['date'], '%Y-%m-%d') + timedelta(days=1)).strftime('%Y-%m-%d')
+                subscriber = ChannelSubscriber.objects.filter(channel_idx=video['channel_idx'])
+                subscriber_num=subscriber[0].subscriber_num
+                if video['date'] in subscribers:
+                    subscribers[video['date']]=int(subscribers[video['date']])+int(subscriber_num)
+                else:
+                    subscribers[video['date']]=int(subscriber_num)
+            subdict={}
+            for i in range(0,7):
+                subdict[popularTranstitionViews[i]['date']]=popularTranstitionViews[i]['value']/subscribers[popularTranstitionViews[i]['date']]*100
+            subscribers=[]
+            for key in subdict.keys():
+                subscribers.append({"date":key,"value":subdict[key]})
+                # .annotate(value=Sum()))
             #channel_subscriber__check_time=date&&channel_subscriber__channel_idx=channel_idx__idx
-            print(popularTranstitionSubscriber)
+            # print(popularTranstitionSubscriber)
             keywordCountSerializer=KeywordCountSerializer(keywords,many=True)
                         
             topVideoSerializer = TopVideoSerializer(topVideo,many=True)
             recentVideoSerializer = RecentVideoSerializer(recentVideo,many=True)
             return Response({'video':[{"type":"analysis","data":topVideoSerializer.data},\
                 {"type":"aside","data":recentVideoSerializer.data}], 'wordmap':{'name':search,'children':keywordCountSerializer.data}\
-                    ,"lines":[{"type":"인기 키워드","data":imagingTransition}]}) 
+                    ,"lines":[{"type":"영상화 키워드","data":imagingTransition},{"type":"인기 키워드","data":subscribers}]}) 
         else:
             paginator = PageNumberPagination()
             paginator.page_size = 10
