@@ -1,11 +1,12 @@
 from django.shortcuts import render
 from rest_framework import viewsets  
 from rest_framework.decorators import api_view
+from django.utils import timezone
 from rest_framework.pagination import PageNumberPagination
-from django.db.models import Max 
+from django.db.models import Max ,Count, Sum, OuterRef, Subquery
 from Search_Keyword.serializers import ChannelListSerializer, VideoKeywordSerializer, TopVideoSerializer\
     ,RecentVideoSerializer, KeywordCountSerializer
-from .models import Channel, VideoKeywordNew, Video, VideoViews
+from .models import Channel, VideoKeywordNew, Video, VideoViews,ChannelSubscriber
 from rest_framework.response import Response
 import datetime, itertools, collections
 # from Search_Keyword.serializers import topComment
@@ -19,9 +20,9 @@ def keyword(request):
     if request.method == 'GET':
         search=request.query_params.get('search')
         if search:
-            start=datetime.datetime.now()-datetime.timedelta(days=14)
+            start=timezone.now()-datetime.timedelta(days=14)
             start=start.strftime("%Y-%m-%d")
-            end=datetime.datetime.now().strftime("%Y-%m-%d")
+            end=timezone.now().strftime("%Y-%m-%d")
             # topVideo =Video.objects.all()\
             #     .filter(videokeywordnew__keyword=search, upload_time__range=(start,end))\
             #     .order_by('-videoviews__views')[:10]
@@ -57,12 +58,27 @@ def keyword(request):
                     self.value=keyword['value']
             keywords=[Keyword(keyword=keyword) for keyword in keywords]
 
+            imagingTransition = list(Video.objects.all()\
+                .filter(videokeywordnew__keyword=search, upload_time__range=(start,end))\
+                .extra(select={'date': "TO_CHAR(upload_time, 'YYYY-MM-DD')"}).values('date') \
+                .annotate(value=Count('upload_time')))
+            popularTranstitionViews = list(Video.objects.all()\
+                .filter(videokeywordnew__keyword=search, upload_time__range=(start,end))\
+                .extra(select={'date': "TO_CHAR(upload_time, 'YYYY-MM-DD')"}).values('date') \
+                .annotate(value=Sum('videoviews__views')))
+            popularTranstitionSubscriber = list(Video.objects.all()\
+                .filter(videokeywordnew__keyword=search, upload_time__range=(start,end))\
+                .extra(select={'date': "TO_CHAR(upload_time, 'YYYY-MM-DD')"}).values('date') \
+                .annotate(value=Sum(Subquery(ChannelSubscriber.objects.all().filter(check_time=OuterRef('date'),channel_idx=OuterRef('channel_idx__idx'))))))
+            #channel_subscriber__check_time=date&&channel_subscriber__channel_idx=channel_idx__idx
+            print(popularTranstitionSubscriber)
             keywordCountSerializer=KeywordCountSerializer(keywords,many=True)
                         
             topVideoSerializer = TopVideoSerializer(topVideo,many=True)
             recentVideoSerializer = RecentVideoSerializer(recentVideo,many=True)
             return Response({'video':[{"type":"analysis","data":topVideoSerializer.data},\
-                {"type":"aside","data":recentVideoSerializer.data}], 'wordmap':{'name':search,'children':keywordCountSerializer.data}}) 
+                {"type":"aside","data":recentVideoSerializer.data}], 'wordmap':{'name':search,'children':keywordCountSerializer.data}\
+                    ,"lines":[{"type":"인기 키워드","data":imagingTransition}]}) 
         else:
             paginator = PageNumberPagination()
             paginator.page_size = 10
