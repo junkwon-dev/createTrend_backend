@@ -112,7 +112,10 @@ def keyword(request):
             topImagingKeywords=list(itertools.chain(*topImagingKeywords))
             counter=collections.Counter(topImagingKeywords)
             topImagingKeywords=dict(counter.most_common(n=11))
-            del(topImagingKeywords[search])
+            try:   
+                del(topImagingKeywords[search])
+            except:
+                pass
             topImagingKeywords=[{"name":key,"value":topImagingKeywords[key]} for key in topImagingKeywords.keys()]
             topImagingKeywords=[Keyword(keyword=keyword) for keyword in topImagingKeywords]
             
