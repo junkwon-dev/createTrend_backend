@@ -99,7 +99,10 @@ def keyword(request):
             topPopularKeywords=list(itertools.chain(*topPopularKeywords))
             counter=collections.Counter(topPopularKeywords)
             topPopularKeywords=dict(counter.most_common(n=11))
-            del(topPopularKeywords[search])
+            try:
+                del(topPopularKeywords[search])
+            except:
+                pass
             topPopularKeywords=[{"name":key,"value":topPopularKeywords[key]} for key in topPopularKeywords.keys()]
             topPopularKeywords=[Keyword(keyword=keyword) for keyword in topPopularKeywords]
             imagingTransitionKeyword = list(Video.objects.all()\
