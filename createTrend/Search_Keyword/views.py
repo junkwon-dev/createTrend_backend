@@ -88,13 +88,43 @@ def keyword(request):
                 # .annotate(value=Sum()))
             #channel_subscriber__check_time=date&&channel_subscriber__channel_idx=channel_idx__idx
             # print(popularTranstitionSubscriber)
+            popularTopKeyword = Video.objects.all()\
+                .filter(videokeywordnew__keyword=search, upload_time__range=(start,end))\
+                .order_by('-popularity')[:30]
+            topPopularKeywords=[]
+            for popularKeyword in popularTopKeyword:
+                keyword = [keywords.keyword for keywords in popularKeyword.videokeywordnew.all()]
+                topPopularKeywords.append(keyword)
+            topPopularKeywords=list(itertools.chain(*topPopularKeywords))
+            counter=collections.Counter(topPopularKeywords)
+            topPopularKeywords=dict(counter.most_common(n=11))
+            del(topPopularKeywords[search])
+            topPopularKeywords=[{"name":key,"value":topPopularKeywords[key]} for key in topPopularKeywords.keys()]
+            topPopularKeywords=[Keyword(keyword=keyword) for keyword in topPopularKeywords]
+            imagingTransitionKeyword = list(Video.objects.all()\
+                .filter(videokeywordnew__keyword=search, upload_time__range=(start,end)))
+            
+            topImagingKeywords=[]
+            for imagingkeywordvideo in imagingTransitionKeyword:
+                keyword = [keywords.keyword for keywords in imagingkeywordvideo.videokeywordnew.all()]
+                topImagingKeywords.append(keyword)
+            topImagingKeywords=list(itertools.chain(*topImagingKeywords))
+            counter=collections.Counter(topImagingKeywords)
+            topImagingKeywords=dict(counter.most_common(n=11))
+            del(topImagingKeywords[search])
+            topImagingKeywords=[{"name":key,"value":topImagingKeywords[key]} for key in topImagingKeywords.keys()]
+            topImagingKeywords=[Keyword(keyword=keyword) for keyword in topImagingKeywords]
+            
+            topImagingKeywordCountSerializer=KeywordCountSerializer(topImagingKeywords,many=True)
+            topkeywordCountSerializer=KeywordCountSerializer(topPopularKeywords,many=True)
             keywordCountSerializer=KeywordCountSerializer(keywords,many=True)
                         
             topVideoSerializer = TopVideoSerializer(topVideo,many=True)
             recentVideoSerializer = RecentVideoSerializer(recentVideo,many=True)
             return Response({'video':[{"type":"analysis","data":topVideoSerializer.data},\
                 {"type":"aside","data":recentVideoSerializer.data}], 'wordmap':{'name':search,'children':keywordCountSerializer.data}\
-                    ,"lines":[{"type":"영상화 키워드","data":imagingTransition},{"type":"인기 키워드","data":subscribers}]}) 
+                    ,"lines":[{"type":"영상화 키워드","data":imagingTransition},{"type":"인기 키워드","data":subscribers}]\
+                    ,"keyword":[{"type":"인기 키워드","keyword":topkeywordCountSerializer.data},{"type":"영상화 키워드","keyword":topImagingKeywordCountSerializer.data}]}) 
         else:
             paginator = PageNumberPagination()
             paginator.page_size = 10

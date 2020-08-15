@@ -38,7 +38,7 @@ class Video(models.Model):
     thumbnail_url = models.CharField(max_length=200, blank=True, null=True)
     thumbnail_processed = models.BooleanField(blank=True, null=True)
     forbidden = models.BooleanField(blank=True, null=True)
-
+    popularity = models.FloatField()
     class Meta:
         managed = False
         db_table = 'video'
