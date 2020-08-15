@@ -1,5 +1,5 @@
 from django.urls import path
-from Search_Keyword import views
+from Analyze_Channel import views
 
 urlpatterns = [
     path('', views.analyze_channel),

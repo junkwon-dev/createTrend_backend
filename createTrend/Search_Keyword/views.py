@@ -80,7 +80,7 @@ def keyword(request):
                 else:
                     subscribers[video['date']]=int(subscriber_num)
             subdict={}
-            for i in range(0,7):
+            for i in range(len(popularTranstitionViews)):
                 subdict[popularTranstitionViews[i]['date']]=popularTranstitionViews[i]['value']/subscribers[popularTranstitionViews[i]['date']]*100
             subscribers=[]
             for key in subdict.keys():
@@ -90,9 +90,10 @@ def keyword(request):
             # print(popularTranstitionSubscriber)
             popularTopKeyword = Video.objects.all()\
                 .filter(videokeywordnew__keyword=search, upload_time__range=(start,end))\
-                .order_by('-popularity')[:30]
+                .order_by('-popularity').prefetch_related('videokeywordnew')[:100]
             topPopularKeywords=[]
             for popularKeyword in popularTopKeyword:
+                print(popularKeyword.videokeywordnew.all())
                 keyword = [keywords.keyword for keywords in popularKeyword.videokeywordnew.all()]
                 topPopularKeywords.append(keyword)
             topPopularKeywords=list(itertools.chain(*topPopularKeywords))
