@@ -3,6 +3,8 @@ from rest_framework import viewsets, status
 from rest_framework.decorators import api_view
 from rest_framework.views import APIView
 from rest_framework.response import Response
+from django.utils import timezone
+from datetime import datetime, timedelta
 from Search_StarYoutuber.serializers import ChannelInfoSerializer, ChannelSubscriberSerializer, ChannelListSerializer\
     , VideoSerializer,VideoViewsSerializer, VideoKeywordSerializer, KeywordCountSerializer\
     , ChannelViewsCountSerializer
@@ -45,8 +47,15 @@ def channelinfo(request,pk):
                 self.name = keyword['name']
                 self.value=keyword['value']
         keywords=[Keyword(keyword=keyword) for keyword in keywords]
-        
-        
+        start=timezone.now()-datetime.timedelta(days=50)
+        start=start.strftime("%Y-%m-%d")
+        end=timezone.now().strftime("%Y-%m-%d")    
+        channelSubscribers=list(channel.channelsubscriber.filter(check_time__range=(start,end)).order_by('check_time'))
+        ChannelSubscriber=[]
+        for channelSubscirber in channelSubscribers:
+            date=channelSubscirber.check_time
+            value=channelSubscirber.subscriber_num
+            ChannelSubscriber.append({"date":date,"value":value})
         keywordCountSerializer=KeywordCountSerializer(keywords,many=True)
         topChannelSubscriberSerializer=ChannelSubscriberSerializer(topChannelSubscriber,many=True)
         channelSerializer = ChannelInfoSerializer(channel)
@@ -56,10 +65,10 @@ def channelinfo(request,pk):
         channelinfodict['subscriber']=subscribernum
         # return Response({'ChannelInfo':channelSerializer.data, 'TopViewVideo':topViewVideoSerializer.data,'Keyword':videoKeywordSerializer.data})
         return Response({'channelInfo':channelinfodict, 'video':{"type":"aside","data":topViewVideoSerializer.data}\
-            ,'keyword':{'pie':keywordCountSerializer.data}})
+            ,'keyword':{'pie':keywordCountSerializer.data},'line':{"type":"구독자수 추이","data":ChannelSubscriber}})
     
 @api_view(['GET'])
-def channelviewscount(request,pk):
+def channelperioddata(request,pk):
     try:
         channel = Channel.objects\
             .get(pk=pk)
@@ -69,7 +78,6 @@ def channelviewscount(request,pk):
         start=request.query_params.get('start')
         end=request.query_params.get('end')
         if(start and end):
-            channelviews=channel.channelsubscriber.filter(check_time__range=(start,end))
             videos=channel.video.filter(upload_time__range=(start,end))
             videos = channel.video.filter(upload_time__range=(start,end)).prefetch_related('videokeyword')
             keywords=[]
@@ -91,10 +99,12 @@ def channelviewscount(request,pk):
 
             keywordCountSerializer=KeywordCountSerializer(keywords,many=True)
             videoSerializer=VideoSerializer(videos,many=True)
-            channelSubscriberSerializer=ChannelSubscriberSerializer(channelviews,many=True)
-            return Response({'ChannelSubscriber':channelSubscriberSerializer.data,'Video':videoSerializer.data, 'Keyword':keywordCountSerializer.data})
-        else:    
-            channelSubscriber=channel.channelsubscriber.all()
+            return Response({'Video':videoSerializer.data, 'Keyword':keywordCountSerializer.data})
+        else:
+            start=timezone.now()-datetime.timedelta(days=14)
+            start=start.strftime("%Y-%m-%d")
+            end=timezone.now().strftime("%Y-%m-%d")    
+            channelSubscriber=channel.channelsubscriber.filter(check_time__range=(start,end))
             channelSubscriberSerializer=ChannelSubscriberSerializer(channelSubscriber,many=True)
             return Response(channelSubscriberSerializer.data)
 
