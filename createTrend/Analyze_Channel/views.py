@@ -9,11 +9,85 @@ from .models import Channel, VideoKeywordNew, Video, ChannelSubscriber, VideoVie
 from .serializers import VideoKeywordSerializer, KeywordCountSerializer,VideoSerializer
 # Create your views here.
 
+def imagingIncreaseRate(keyword):
+    #전주
+    start=timezone.now()-datetime.timedelta(days=14)
+    start=start.strftime("%Y-%m-%d")
+    end=(timezone.now()-datetime.timedelta(days=7)).strftime("%Y-%m-%d")
+    imagingTransition = list(Video.objects.all()\
+        .filter(videokeywordnew__keyword__contains=keyword, upload_time__range=(start,end))\
+        .extra(select={'date': "TO_CHAR(upload_time, 'YYYY-MM-DD')"}).values('date') \
+        .annotate(value=Count('idx')))
+    imagingVideoSum=0
+    for imagingvideo in imagingTransition:
+        imagingVideoSum+=imagingvideo['value']
+    try:
+        lastWeekAvgImaging=imagingVideoSum/len(imagingTransition)
+    except:
+        lastWeekAvgImaging=0
+    #이번주
+    start=timezone.now()-datetime.timedelta(days=7)
+    start=start.strftime("%Y-%m-%d")
+    end=timezone.now().strftime("%Y-%m-%d")
+    imagingTransition = list(Video.objects.all()\
+        .filter(videokeywordnew__keyword__contains=keyword, upload_time__range=(start,end))\
+        .extra(select={'date': "TO_CHAR(upload_time, 'YYYY-MM-DD')"}).values('date') \
+        .annotate(value=Count('idx')))
+    imagingVideoSum=0
+    for imagingvideo in imagingTransition:
+        imagingVideoSum+=imagingvideo['value']
+    try:
+        thisWeekAvgImaging=imagingVideoSum/len(imagingTransition)
+    except:
+        thisWeekAvgImaging=0
+    try:
+        weekAvgIncrease = (thisWeekAvgImaging - lastWeekAvgImaging)/lastWeekAvgImaging * 100
+    except:
+        weekAvgIncrease=0
+    
+    #전날
+    start=timezone.now()-datetime.timedelta(days=2)
+    start=start.strftime("%Y-%m-%d")
+    end=(timezone.now()-datetime.timedelta(days=1)).strftime("%Y-%m-%d")
+    imagingTransition = list(Video.objects.all()\
+        .filter(videokeywordnew__keyword__contains=keyword, upload_time__range=(start,end))\
+        .extra(select={'date': "TO_CHAR(upload_time, 'YYYY-MM-DD')"}).values('date') \
+        .annotate(value=Count('idx')))
+    imagingVideoSum=0
+    for imagingvideo in imagingTransition:
+        imagingVideoSum+=imagingvideo['value']
+    try:
+        lastDayAvgImaging=imagingVideoSum/len(imagingTransition)
+    except:
+        lastDayAvgImaging=0
+    #오늘
+    start=timezone.now()-datetime.timedelta(days=1)
+    start=start.strftime("%Y-%m-%d")
+    end=timezone.now().strftime("%Y-%m-%d")
+    imagingTransition = list(Video.objects.all()\
+        .filter(videokeywordnew__keyword__contains=keyword, upload_time__range=(start,end))\
+        .extra(select={'date': "TO_CHAR(upload_time, 'YYYY-MM-DD')"}).values('date') \
+        .annotate(value=Count('idx')))
+    imagingVideoSum=0
+    for imagingvideo in imagingTransition:
+        imagingVideoSum+=imagingvideo['value']
+    try:
+        thisDayAvgImaging=imagingVideoSum/len(imagingTransition)
+    except:
+        thisDayAvgImaging=0
+    try:
+        dayAvgIncrease = (thisDayAvgImaging - lastDayAvgImaging)/lastDayAvgImaging * 100
+    except:
+        dayAvgIncrease=0
+    return weekAvgIncrease,dayAvgIncrease
+
+
 @api_view(['GET'])
 def keyword_data(request):
     search=request.query_params.get('search')
     keyword=request.query_params.get('keyword')
     if (search == '영상화' and keyword):
+        weekAvgIncrease,dayAvgIncrease=imagingIncreaseRate(keyword)
         start=timezone.now()-datetime.timedelta(days=14)
         start=start.strftime("%Y-%m-%d")
         end=timezone.now().strftime("%Y-%m-%d")
@@ -25,7 +99,6 @@ def keyword_data(request):
         for imagingvideo in imagingTransition:
             imagingVideoSum+=imagingvideo['value']
         avgImaging=imagingVideoSum/len(imagingTransition)
-        print(avgImaging)
         keywordVideo=Video.objects.all()\
             .filter(videokeywordnew__keyword__contains=keyword, upload_time__range=(start,end))\
             .order_by('-upload_time')[:1000].prefetch_related('videokeywordnew')  
@@ -56,8 +129,128 @@ def keyword_data(request):
             topViewVideo.append(hv.video_idx)     
         topViewVideoSerializer=VideoSerializer(topViewVideo,many=True)
         # return Response([imagingTransition,keywordCountSerializer.data])
-        return Response({"type":"영상","keyword":[{"name":keyword,"popular":avgImaging,"wordmap":keywordCountSerializer.data,"lines":imagingTransition,"video":topViewVideoSerializer.data}]})
+        return Response({"type":"영상","keyword":[{"name":keyword,"popular":avgImaging,"wordmap":keywordCountSerializer.data,"lines":imagingTransition,"video":topViewVideoSerializer.data,"increase":{"week":weekAvgIncrease,"day":dayAvgIncrease}}]})
     elif (search == '인기' and keyword):
+        #전주
+        start=timezone.now()-datetime.timedelta(days=14)
+        start=start.strftime("%Y-%m-%d")
+        end=(timezone.now()-datetime.timedelta(days=7)).strftime("%Y-%m-%d")
+        popularTransitionViews = list(Video.objects.all()\
+            .filter(videokeywordnew__keyword__contains=keyword, upload_time__range=(start,end))\
+            .extra(select={'date': "TO_CHAR(upload_time, 'YYYY-MM-DD')"}).values('date') \
+            .annotate(value=Sum('videoviews__views')))
+        popularTransitionSubscriber = list(Video.objects.all()\
+            .filter(videokeywordnew__keyword__contains=keyword, upload_time__range=(start,end))\
+            .extra(select={'date': "TO_CHAR(upload_time, 'YYYY-MM-DD')"}).values('date','channel_idx'))
+        subscribers={}
+        for video in popularTransitionSubscriber:
+            subscriber = ChannelSubscriber.objects.filter(channel_idx=video['channel_idx'])
+            subscriber_num=subscriber[0].subscriber_num
+            if video['date'] in subscribers:
+                subscribers[video['date']]=int(subscribers[video['date']])+int(subscriber_num)
+            else:
+                subscribers[video['date']]=int(subscriber_num)
+        popularDict={}
+        popularDictSum=0
+        for i in range(len(popularTransitionViews)):
+            popularDict[popularTransitionViews[i]['date']]=popularTransitionViews[i]['value']/subscribers[popularTransitionViews[i]['date']]*100
+            popularDictSum+=popularDict[popularTransitionViews[i]['date']]
+        lastweekAvgPupularDict=popularDictSum/len(popularTransitionViews)
+        #이번주평균
+        start=timezone.now()-datetime.timedelta(days=7)
+        start=start.strftime("%Y-%m-%d")
+        end=timezone.now().strftime("%Y-%m-%d")
+        popularTransitionViews = list(Video.objects.all()\
+            .filter(videokeywordnew__keyword__contains=keyword, upload_time__range=(start,end))\
+            .extra(select={'date': "TO_CHAR(upload_time, 'YYYY-MM-DD')"}).values('date') \
+            .annotate(value=Sum('videoviews__views')))
+        popularTransitionSubscriber = list(Video.objects.all()\
+            .filter(videokeywordnew__keyword__contains=keyword, upload_time__range=(start,end))\
+            .extra(select={'date': "TO_CHAR(upload_time, 'YYYY-MM-DD')"}).values('date','channel_idx'))
+        subscribers={}
+        for video in popularTransitionSubscriber:
+            subscriber = ChannelSubscriber.objects.filter(channel_idx=video['channel_idx'])
+            subscriber_num=subscriber[0].subscriber_num
+            if video['date'] in subscribers:
+                subscribers[video['date']]=int(subscribers[video['date']])+int(subscriber_num)
+            else:
+                subscribers[video['date']]=int(subscriber_num)
+        popularDict={}
+        popularDictSum=0
+        for i in range(len(popularTransitionViews)):
+            popularDict[popularTransitionViews[i]['date']]=popularTransitionViews[i]['value']/subscribers[popularTransitionViews[i]['date']]*100
+            popularDictSum+=popularDict[popularTransitionViews[i]['date']]
+        try:
+            thisweekAvgPupularDict=popularDictSum/len(popularTransitionViews)
+        except:
+            thisweekAvgPupularDict=0
+        #증감률
+        try:
+            increaseRateWeek=(lastweekAvgPupularDict-thisweekAvgPupularDict)/lastweekAvgPupularDict*100
+        except:
+            increaseRateWeek=0
+        #전날
+        start=timezone.now()-datetime.timedelta(days=2)
+        start=start.strftime("%Y-%m-%d")
+        end=(timezone.now()-datetime.timedelta(days=1)).strftime("%Y-%m-%d")
+        popularTransitionViews = list(Video.objects.all()\
+            .filter(videokeywordnew__keyword__contains=keyword, upload_time__range=(start,end))\
+            .extra(select={'date': "TO_CHAR(upload_time, 'YYYY-MM-DD')"}).values('date') \
+            .annotate(value=Sum('videoviews__views')))
+        popularTransitionSubscriber = list(Video.objects.all()\
+            .filter(videokeywordnew__keyword__contains=keyword, upload_time__range=(start,end))\
+            .extra(select={'date': "TO_CHAR(upload_time, 'YYYY-MM-DD')"}).values('date','channel_idx'))
+        subscribers={}
+        for video in popularTransitionSubscriber:
+            subscriber = ChannelSubscriber.objects.filter(channel_idx=video['channel_idx'])
+            subscriber_num=subscriber[0].subscriber_num
+            if video['date'] in subscribers:
+                subscribers[video['date']]=int(subscribers[video['date']])+int(subscriber_num)
+            else:
+                subscribers[video['date']]=int(subscriber_num)
+        popularDict={}
+        popularDictSum=0
+        for i in range(len(popularTransitionViews)):
+            popularDict[popularTransitionViews[i]['date']]=popularTransitionViews[i]['value']/subscribers[popularTransitionViews[i]['date']]*100
+            popularDictSum+=popularDict[popularTransitionViews[i]['date']]
+        try:
+            lastdayAvgPupularDict=popularDictSum/len(popularTransitionViews)
+        except:
+            lastdayAvgPupularDict=0
+        #오늘평균
+        start=timezone.now()-datetime.timedelta(days=1)
+        start=start.strftime("%Y-%m-%d")
+        end=timezone.now().strftime("%Y-%m-%d")
+        popularTransitionViews = list(Video.objects.all()\
+            .filter(videokeywordnew__keyword__contains=keyword, upload_time__range=(start,end))\
+            .extra(select={'date': "TO_CHAR(upload_time, 'YYYY-MM-DD')"}).values('date') \
+            .annotate(value=Sum('videoviews__views')))
+        popularTransitionSubscriber = list(Video.objects.all()\
+            .filter(videokeywordnew__keyword__contains=keyword, upload_time__range=(start,end))\
+            .extra(select={'date': "TO_CHAR(upload_time, 'YYYY-MM-DD')"}).values('date','channel_idx'))
+        subscribers={}
+        for video in popularTransitionSubscriber:
+            subscriber = ChannelSubscriber.objects.filter(channel_idx=video['channel_idx'])
+            subscriber_num=subscriber[0].subscriber_num
+            if video['date'] in subscribers:
+                subscribers[video['date']]=int(subscribers[video['date']])+int(subscriber_num)
+            else:
+                subscribers[video['date']]=int(subscriber_num)
+        popularDict={}
+        popularDictSum=0
+        for i in range(len(popularTransitionViews)):
+            popularDict[popularTransitionViews[i]['date']]=popularTransitionViews[i]['value']/subscribers[popularTransitionViews[i]['date']]*100
+            popularDictSum+=popularDict[popularTransitionViews[i]['date']]
+        try:
+            todayAvgPupularDict=popularDictSum/len(popularTransitionViews)
+        except:
+            todayAvgPupularDict=0
+        #증감률
+        try:
+            increaseRateDay=(lastdayAvgPupularDict-todayAvgPupularDict)/lastdayAvgPupularDict*100
+        except:
+            increaseRateDay=0
+        
         start=timezone.now()-datetime.timedelta(days=14)
         start=start.strftime("%Y-%m-%d")
         end=timezone.now().strftime("%Y-%m-%d")
@@ -82,6 +275,8 @@ def keyword_data(request):
             popularDict[popularTransitionViews[i]['date']]=popularTransitionViews[i]['value']/subscribers[popularTransitionViews[i]['date']]*100
             popularDictSum+=popularDict[popularTransitionViews[i]['date']]
         avgPupularDict=popularDictSum/len(popularTransitionViews)
+        
+        #14일전~7일전
         popularTransition=[]
         for subdictKey in popularDict.keys():
             popularTransition.append({"date":subdictKey,"value":popularDict[subdictKey]})
@@ -112,7 +307,7 @@ def keyword_data(request):
         keywordCountSerializer=KeywordCountSerializer(keywords,many=True)
         
         # return Response([popularDict,keywordCountSerializer.data])
-        return Response({"type":"인기","keyword":[{"name":keyword,"popular":avgPupularDict,"wordmap":keywordCountSerializer.data,"lines":popularTransition,"video":popularVideoSerializer.data}]})
+        return Response({"type":"인기","keyword":[{"name":keyword,"popular":avgPupularDict,"wordmap":keywordCountSerializer.data,"lines":popularTransition,"video":popularVideoSerializer.data,"increase":{"week":increaseRateWeek,"day":increaseRateDay}}]})
 
     return Response("")
 @api_view(['GET'])
@@ -165,4 +360,4 @@ def analyze_channel(request):
     
     topImagingKeywordCountSerializer=KeywordCountSerializer(topImagingKeywords,many=True)
     topkeywordCountSerializer=KeywordCountSerializer(topPopularKeywords,many=True)
-    return Response([topkeywordCountSerializer.data,topImagingKeywordCountSerializer.data])
+    return Response({"인기":topkeywordCountSerializer.data,"영상화":topImagingKeywordCountSerializer.data})
