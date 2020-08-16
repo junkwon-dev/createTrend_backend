@@ -5,7 +5,7 @@ from django.utils import timezone
 from datetime import datetime, timedelta
 from django.db.models import F, Count, Sum
 import datetime, itertools, collections
-from .models import Channel, VideoKeywordNew, Video
+from .models import Channel, VideoKeywordNew, Video, ChannelSubscriber
 from .serializers import VideoKeywordSerializer, KeywordCountSerializer
 # Create your views here.
 @api_view(['GET'])

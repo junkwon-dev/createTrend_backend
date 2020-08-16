@@ -42,7 +42,15 @@ class VideoKeywordNew(models.Model):
         managed = False
         db_table = 'video_keyword_new'
         unique_together = (('video_idx', 'keyword'),)
+class ChannelSubscriber(models.Model):
+    channel_idx = models.ForeignKey(Channel, models.DO_NOTHING, db_column='channel_idx',related_name='channelsubscriber')
+    subscriber_num = models.CharField(max_length=50)
+    check_time = models.DateTimeField()
+    idx = models.AutoField(primary_key=True)
 
+    class Meta:
+        managed = False
+        db_table = 'channel_subscriber'
 class VideoViews(models.Model):
     video_idx = models.ForeignKey(Video, models.DO_NOTHING, db_column='video_idx', related_name='videoviews')
     views = models.IntegerField()
