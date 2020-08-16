@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Channel, ChannelSubscriber, VideoViews, Video, VideoKeyword,ChannelViews
+from .models import Channel, ChannelSubscriber, VideoViews, Video, VideoKeywordNew,ChannelViews
 
 # 사용자 목록
         
@@ -19,9 +19,9 @@ class ChannelViewsCountSerializer(serializers.HyperlinkedModelSerializer):
         model = ChannelViews
         fields = ['view_count','check_time']
 
-class VideoKeywordSerializer(serializers.HyperlinkedModelSerializer):
+class VideoKeywordNewSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
-        model = VideoKeyword
+        model = VideoKeywordNew
         fields = ['keyword']
 
 class VideoViewsSerializer(serializers.HyperlinkedModelSerializer):
@@ -31,9 +31,10 @@ class VideoViewsSerializer(serializers.HyperlinkedModelSerializer):
 
 class VideoSerializer(serializers.HyperlinkedModelSerializer):
     videoviews=VideoViewsSerializer(many=True,read_only=True)
+    videokeywordnew=VideoKeywordNewSerializer(many=True,read_only=True)
     class Meta:
         model = Video
-        fields = ['video_name','video_description','video_id','upload_time','processed','thumbnail_url','thumbnail_processed','videoviews']
+        fields = ['video_name','video_description','video_id','upload_time','processed','thumbnail_url','thumbnail_processed','videoviews','videokeywordnew']
 
 class ChannelInfoSerializer(serializers.HyperlinkedModelSerializer):
     videoviews=VideoViewsSerializer(many=True,read_only=True)

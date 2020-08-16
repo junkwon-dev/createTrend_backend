@@ -6,7 +6,7 @@ from rest_framework.response import Response
 from django.utils import timezone
 from datetime import datetime, timedelta
 from Search_StarYoutuber.serializers import ChannelInfoSerializer, ChannelSubscriberSerializer, ChannelListSerializer\
-    , VideoSerializer,VideoViewsSerializer, VideoKeywordSerializer, KeywordCountSerializer\
+    , VideoSerializer,VideoViewsSerializer, VideoKeywordNewSerializer, KeywordCountSerializer\
     , ChannelViewsCountSerializer
 from rest_framework.pagination import PageNumberPagination
 from .models import Channel, ChannelSubscriber, VideoViews,Video
@@ -31,11 +31,11 @@ def channelinfo(request,pk):
             .order_by('-check_time')[:1]
             
         
-        videos = channel.video.all().prefetch_related('videokeyword')
+        videos = channel.video.all().prefetch_related('videokeywordnew')
         keywords=[]
         
         for video in videos:
-            keyword=[videokeyword.keyword for videokeyword in video.videokeyword.all()]
+            keyword=[vk.keyword for vk in video.videokeywordnew.all()]
             keywords.append(keyword)
         keywords=list(itertools.chain(*keywords))
         counter=collections.Counter(keywords)
@@ -78,12 +78,11 @@ def channelperioddata(request,pk):
         start=request.query_params.get('start')
         end=request.query_params.get('end')
         if(start and end):
-            videos=channel.video.filter(upload_time__range=(start,end))
-            videos = channel.video.filter(upload_time__range=(start,end)).order_by('-videoviews__views').prefetch_related('videokeyword')[:5]
+            videos = channel.video.filter(upload_time__range=(start,end)).order_by('-videoviews__views').prefetch_related('videokeywordnew')[:5]
             keywords=[]
 
             for video in videos:
-                keyword=[videokeyword.keyword for videokeyword in video.videokeyword.all()]
+                keyword=[vk.keyword for vk in video.videokeywordnew.all()]
                 keywords.append(keyword)
             keywords=list(itertools.chain(*keywords))
             counter=collections.Counter(keywords)

@@ -41,7 +41,7 @@ def keyword(request):
             # videos = channel.video.all().prefetch_related('videokeyword')
             keywordVideo=Video.objects.all()\
                 .filter(videokeywordnew__keyword__contains=search, upload_time__range=(start,end))\
-                .order_by('-upload_time')[:5].prefetch_related('videokeywordnew')  
+                .order_by('-upload_time')[:1000].prefetch_related('videokeywordnew')  
             keywords=[]
 
             for video in keywordVideo:
@@ -72,7 +72,6 @@ def keyword(request):
                 .extra(select={'date': "TO_CHAR(upload_time, 'YYYY-MM-DD')"}).values('date','channel_idx'))
             subscribers={}
             for video in popularTranstitionSubscriber:
-                res = (datetime.datetime.strptime(video['date'], '%Y-%m-%d') + timedelta(days=1)).strftime('%Y-%m-%d')
                 subscriber = ChannelSubscriber.objects.filter(channel_idx=video['channel_idx'])
                 subscriber_num=subscriber[0].subscriber_num
                 if video['date'] in subscribers:
@@ -94,7 +93,7 @@ def keyword(request):
             topPopularKeywords=[]
             for popularKeyword in popularTopKeyword:
                 print(popularKeyword.videokeywordnew.all())
-                keyword = [keywords.keyword for keywords in popularKeyword.videokeywordnew.all()]
+                keyword = [popkeywords.keyword for popkeywords in popularKeyword.videokeywordnew.all()]
                 topPopularKeywords.append(keyword)
             topPopularKeywords=list(itertools.chain(*topPopularKeywords))
             counter=collections.Counter(topPopularKeywords)
@@ -110,7 +109,7 @@ def keyword(request):
             
             topImagingKeywords=[]
             for imagingkeywordvideo in imagingTransitionKeyword:
-                keyword = [keywords.keyword for keywords in imagingkeywordvideo.videokeywordnew.all()]
+                keyword = [imagingkeywords.keyword for imagingkeywords in imagingkeywordvideo.videokeywordnew.all()]
                 topImagingKeywords.append(keyword)
             topImagingKeywords=list(itertools.chain(*topImagingKeywords))
             counter=collections.Counter(topImagingKeywords)

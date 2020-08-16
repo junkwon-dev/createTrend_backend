@@ -3,11 +3,118 @@ from rest_framework.response import Response
 from rest_framework.decorators import api_view
 from django.utils import timezone
 from datetime import datetime, timedelta
-from django.db.models import F, Count, Sum
+from django.db.models import F, Count, Sum, Max
 import datetime, itertools, collections
-from .models import Channel, VideoKeywordNew, Video, ChannelSubscriber
-from .serializers import VideoKeywordSerializer, KeywordCountSerializer
+from .models import Channel, VideoKeywordNew, Video, ChannelSubscriber, VideoViews
+from .serializers import VideoKeywordSerializer, KeywordCountSerializer,VideoSerializer
 # Create your views here.
+
+@api_view(['GET'])
+def keyword_data(request):
+    search=request.query_params.get('search')
+    keyword=request.query_params.get('keyword')
+    if (search == '영상화' and keyword):
+        start=timezone.now()-datetime.timedelta(days=14)
+        start=start.strftime("%Y-%m-%d")
+        end=timezone.now().strftime("%Y-%m-%d")
+        imagingTransition = list(Video.objects.all()\
+            .filter(videokeywordnew__keyword__contains=keyword, upload_time__range=(start,end))\
+            .extra(select={'date': "TO_CHAR(upload_time, 'YYYY-MM-DD')"}).values('date') \
+            .annotate(value=Count('idx')))
+        imagingVideoSum=0
+        for imagingvideo in imagingTransition:
+            imagingVideoSum+=imagingvideo['value']
+        avgImaging=imagingVideoSum/len(imagingTransition)
+        print(avgImaging)
+        keywordVideo=Video.objects.all()\
+            .filter(videokeywordnew__keyword__contains=keyword, upload_time__range=(start,end))\
+            .order_by('-upload_time')[:1000].prefetch_related('videokeywordnew')  
+        keywords=[]
+        for video in keywordVideo:
+            videokeytmp=[videokeyword.keyword for videokeyword in video.videokeywordnew.all()]
+            keywords.append(videokeytmp)
+        keywords=list(itertools.chain(*keywords))
+        while keyword in keywords:
+            keywords.remove(keyword)
+        counter=collections.Counter(keywords)
+        keywords=dict(counter.most_common(n=7))
+        keywords=[{"name":key,"value":keywords[key]} for key in keywords.keys()]
+        class Keyword(object):
+            def __init__(self,keyword):
+                self.name = keyword['name']
+                self.value=keyword['value']
+        keywords=[Keyword(keyword=keyword) for keyword in keywords]
+        keywordCountSerializer=KeywordCountSerializer(keywords,many=True)
+        videos = Video.objects.filter(videokeywordnew__keyword__contains=keyword, upload_time__range=(start,end))\
+            .annotate(hottest_video_made_at=Max('videoviews__check_time')) 
+        
+        hottest_videos = VideoViews.objects.filter(
+            check_time__in=[v.hottest_video_made_at for v in videos]
+            ).order_by('-views')[:5]
+        topViewVideo=[]
+        for hv in hottest_videos:
+            topViewVideo.append(hv.video_idx)     
+        topViewVideoSerializer=VideoSerializer(topViewVideo,many=True)
+        # return Response([imagingTransition,keywordCountSerializer.data])
+        return Response({"type":"영상","keyword":[{"name":keyword,"popular":avgImaging,"wordmap":keywordCountSerializer.data,"lines":imagingTransition,"video":topViewVideoSerializer.data}]})
+    elif (search == '인기' and keyword):
+        start=timezone.now()-datetime.timedelta(days=14)
+        start=start.strftime("%Y-%m-%d")
+        end=timezone.now().strftime("%Y-%m-%d")
+        popularTransitionViews = list(Video.objects.all()\
+            .filter(videokeywordnew__keyword__contains=keyword, upload_time__range=(start,end))\
+            .extra(select={'date': "TO_CHAR(upload_time, 'YYYY-MM-DD')"}).values('date') \
+            .annotate(value=Sum('videoviews__views')))
+        popularTransitionSubscriber = list(Video.objects.all()\
+            .filter(videokeywordnew__keyword__contains=keyword, upload_time__range=(start,end))\
+            .extra(select={'date': "TO_CHAR(upload_time, 'YYYY-MM-DD')"}).values('date','channel_idx'))
+        subscribers={}
+        for video in popularTransitionSubscriber:
+            subscriber = ChannelSubscriber.objects.filter(channel_idx=video['channel_idx'])
+            subscriber_num=subscriber[0].subscriber_num
+            if video['date'] in subscribers:
+                subscribers[video['date']]=int(subscribers[video['date']])+int(subscriber_num)
+            else:
+                subscribers[video['date']]=int(subscriber_num)
+        popularDict={}
+        popularDictSum=0
+        for i in range(len(popularTransitionViews)):
+            popularDict[popularTransitionViews[i]['date']]=popularTransitionViews[i]['value']/subscribers[popularTransitionViews[i]['date']]*100
+            popularDictSum+=popularDict[popularTransitionViews[i]['date']]
+        avgPupularDict=popularDictSum/len(popularTransitionViews)
+        popularTransition=[]
+        for subdictKey in popularDict.keys():
+            popularTransition.append({"date":subdictKey,"value":popularDict[subdictKey]})
+        keywordVideo=Video.objects.all()\
+            .filter(videokeywordnew__keyword__contains=keyword, upload_time__range=(start,end))\
+            .order_by('-upload_time')[:1000].prefetch_related('videokeywordnew')  
+        keywords=[]
+        for video in keywordVideo:
+            videokeytmp=[videokeyword.keyword for videokeyword in video.videokeywordnew.all()]
+            keywords.append(videokeytmp)
+        keywords=list(itertools.chain(*keywords))
+        while keyword in keywords:
+            keywords.remove(keyword)
+        counter=collections.Counter(keywords)
+        keywords=dict(counter.most_common(n=7))
+        keywords=[{"name":key,"value":keywords[key]} for key in keywords.keys()]
+        class Keyword(object):
+            def __init__(self,keyword):
+                self.name = keyword['name']
+                self.value=keyword['value']
+        keywords=[Keyword(keyword=keyword) for keyword in keywords]
+        
+        popularVideo=Video.objects.all()\
+            .filter(videokeywordnew__keyword__contains=keyword, upload_time__range=(start,end))\
+            .order_by(F('popularity').desc(nulls_last=True))[:5]        
+        popularVideoSerializer=VideoSerializer(popularVideo,many=True)
+        
+        keywordCountSerializer=KeywordCountSerializer(keywords,many=True)
+        
+        # return Response([popularDict,keywordCountSerializer.data])
+        return Response({"type":"인기","keyword":[{"name":keyword,"popular":avgPupularDict,"wordmap":keywordCountSerializer.data,"lines":popularTransition,"video":popularVideoSerializer.data}]})
+
+    return Response("")
 @api_view(['GET'])
 def analyze_channel(request):
     search=None
@@ -49,39 +156,13 @@ def analyze_channel(request):
         del(topImagingKeywords[search])
     except:
         pass
+    
     topImagingKeywords=[{"name":key,"value":topImagingKeywords[key]} for key in topImagingKeywords.keys()]
     topImagingKeywords=[Keyword(keyword=keyword) for keyword in topImagingKeywords]
-    print(topImagingKeywords)
-    for data in topImagingKeywords:
-        imagingTransition = list(Video.objects.all()\
-            .filter(videokeywordnew__keyword__contains=data.name, upload_time__range=(start,end))\
-            .extra(select={'date': "TO_CHAR(upload_time, 'YYYY-MM-DD')"}).values('date') \
-            .annotate(value=Count('idx')))
-    for data in topPopularKeywords:
-        popularTranstitionViews = list(Video.objects.all()\
-            .filter(videokeywordnew__keyword__contains=data.name, upload_time__range=(start,end))\
-            .extra(select={'date': "TO_CHAR(upload_time, 'YYYY-MM-DD')"}).values('date') \
-            .annotate(value=Sum('videoviews__views')))
-        popularTranstitionSubscriber = list(Video.objects.all()\
-            .filter(videokeywordnew__keyword__contains=data.name, upload_time__range=(start,end))\
-            .extra(select={'date': "TO_CHAR(upload_time, 'YYYY-MM-DD')"}).values('date','channel_idx'))
-        subscribers={}
-        for video in popularTranstitionSubscriber:
-            res = (datetime.datetime.strptime(video['date'], '%Y-%m-%d') + timedelta(days=1)).strftime('%Y-%m-%d')
-            subscriber = ChannelSubscriber.objects.filter(channel_idx=video['channel_idx'])
-            subscriber_num=subscriber[0].subscriber_num
-            if video['date'] in subscribers:
-                subscribers[video['date']]=int(subscribers[video['date']])+int(subscriber_num)
-            else:
-                subscribers[video['date']]=int(subscriber_num)
-        subdict={}
-        for i in range(len(popularTranstitionViews)):
-            subdict[popularTranstitionViews[i]['date']]=popularTranstitionViews[i]['value']/subscribers[popularTranstitionViews[i]['date']]*100
-        subscribers=[]
-        for key in subdict.keys():
-            subscribers.append({"date":key,"value":subdict[key]})
+
     
+        
     
     topImagingKeywordCountSerializer=KeywordCountSerializer(topImagingKeywords,many=True)
     topkeywordCountSerializer=KeywordCountSerializer(topPopularKeywords,many=True)
-    return Response([topkeywordCountSerializer.data,topImagingKeywordCountSerializer.data],{"lines":[{"type":"영상화 키워드","data":imagingTransition},{"type":"인기 키워드","data":subscribers}]})
+    return Response([topkeywordCountSerializer.data,topImagingKeywordCountSerializer.data])
