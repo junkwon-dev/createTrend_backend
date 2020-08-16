@@ -39,7 +39,7 @@ class ChannelInfoSerializer(serializers.HyperlinkedModelSerializer):
     videoviews=VideoViewsSerializer(many=True,read_only=True)
     class Meta:
         model = Channel
-        fields = ['thumbnail_url', 'channel_description', 'channel_name', 'channel_start_date','videoviews']
+        fields = ['idx','thumbnail_url', 'channel_description', 'channel_name', 'channel_start_date','videoviews']
         
 class KeywordCountSerializer(serializers.Serializer):
     name = serializers.CharField(max_length=200)

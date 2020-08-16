@@ -79,7 +79,7 @@ def channelperioddata(request,pk):
         end=request.query_params.get('end')
         if(start and end):
             videos=channel.video.filter(upload_time__range=(start,end))
-            videos = channel.video.filter(upload_time__range=(start,end)).prefetch_related('videokeyword')
+            videos = channel.video.filter(upload_time__range=(start,end)).order_by('-videoviews__views').prefetch_related('videokeyword')[:5]
             keywords=[]
 
             for video in videos:
@@ -99,7 +99,7 @@ def channelperioddata(request,pk):
 
             keywordCountSerializer=KeywordCountSerializer(keywords,many=True)
             videoSerializer=VideoSerializer(videos,many=True)
-            return Response({'Video':videoSerializer.data, 'Keyword':keywordCountSerializer.data})
+            return Response({'video':{"type":"analysis","data":videoSerializer.data}, 'keyword':{"pie":keywordCountSerializer.data}})
         else:
             start=timezone.now()-datetime.timedelta(days=14)
             start=start.strftime("%Y-%m-%d")
