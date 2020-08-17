@@ -9,77 +9,77 @@ from .models import Channel, VideoKeywordNew, Video, ChannelSubscriber, VideoVie
 from .serializers import VideoKeywordSerializer, KeywordCountSerializer,VideoSerializer
 # Create your views here.
 
-def imagingIncreaseRate(keyword):
-    #전주
-    start=timezone.now()-datetime.timedelta(days=14)
-    start=start.strftime("%Y-%m-%d")
-    end=(timezone.now()-datetime.timedelta(days=7)).strftime("%Y-%m-%d")
-    imagingTransition = list(Video.objects.all()\
-        .filter(videokeywordnew__keyword__contains=keyword, upload_time__range=(start,end))\
-        .extra(select={'date': "TO_CHAR(upload_time, 'YYYY-MM-DD')"}).values('date') \
-        .annotate(value=Count('idx')))
-    imagingVideoSum=0
-    for imagingvideo in imagingTransition:
-        imagingVideoSum+=imagingvideo['value']
-    try:
-        lastWeekAvgImaging=imagingVideoSum/len(imagingTransition)
-    except:
-        lastWeekAvgImaging=0
-    #이번주
-    start=timezone.now()-datetime.timedelta(days=7)
-    start=start.strftime("%Y-%m-%d")
-    end=timezone.now().strftime("%Y-%m-%d")
-    imagingTransition = list(Video.objects.all()\
-        .filter(videokeywordnew__keyword__contains=keyword, upload_time__range=(start,end))\
-        .extra(select={'date': "TO_CHAR(upload_time, 'YYYY-MM-DD')"}).values('date') \
-        .annotate(value=Count('idx')))
-    imagingVideoSum=0
-    for imagingvideo in imagingTransition:
-        imagingVideoSum+=imagingvideo['value']
-    try:
-        thisWeekAvgImaging=imagingVideoSum/len(imagingTransition)
-    except:
-        thisWeekAvgImaging=0
-    try:
-        weekAvgIncrease = (thisWeekAvgImaging - lastWeekAvgImaging)/lastWeekAvgImaging * 100
-    except:
-        weekAvgIncrease=0
+# def imagingIncreaseRate(keyword):
+#     #전주
+#     start=timezone.now()-datetime.timedelta(days=14)
+#     start=start.strftime("%Y-%m-%d")
+#     end=(timezone.now()-datetime.timedelta(days=7)).strftime("%Y-%m-%d")
+#     imagingTransition = list(Video.objects.all()\
+#         .filter(videokeywordnew__keyword__contains=keyword, upload_time__range=(start,end))\
+#         .extra(select={'date': "TO_CHAR(upload_time, 'YYYY-MM-DD')"}).values('date') \
+#         .annotate(value=Count('idx')))
+#     imagingVideoSum=0
+#     for imagingvideo in imagingTransition:
+#         imagingVideoSum+=imagingvideo['value']
+#     try:
+#         lastWeekAvgImaging=imagingVideoSum/len(imagingTransition)
+#     except:
+#         lastWeekAvgImaging=0
+#     #이번주
+#     start=timezone.now()-datetime.timedelta(days=7)
+#     start=start.strftime("%Y-%m-%d")
+#     end=timezone.now().strftime("%Y-%m-%d")
+#     imagingTransition = list(Video.objects.all()\
+#         .filter(videokeywordnew__keyword__contains=keyword, upload_time__range=(start,end))\
+#         .extra(select={'date': "TO_CHAR(upload_time, 'YYYY-MM-DD')"}).values('date') \
+#         .annotate(value=Count('idx')))
+#     imagingVideoSum=0
+#     for imagingvideo in imagingTransition:
+#         imagingVideoSum+=imagingvideo['value']
+#     try:
+#         thisWeekAvgImaging=imagingVideoSum/len(imagingTransition)
+#     except:
+#         thisWeekAvgImaging=0
+#     try:
+#         weekAvgIncrease = (thisWeekAvgImaging - lastWeekAvgImaging)/lastWeekAvgImaging * 100
+#     except:
+#         weekAvgIncrease=0
     
-    #전날
-    start=timezone.now()-datetime.timedelta(days=2)
-    start=start.strftime("%Y-%m-%d")
-    end=(timezone.now()-datetime.timedelta(days=1)).strftime("%Y-%m-%d")
-    imagingTransition = list(Video.objects.all()\
-        .filter(videokeywordnew__keyword__contains=keyword, upload_time__range=(start,end))\
-        .extra(select={'date': "TO_CHAR(upload_time, 'YYYY-MM-DD')"}).values('date') \
-        .annotate(value=Count('idx')))
-    imagingVideoSum=0
-    for imagingvideo in imagingTransition:
-        imagingVideoSum+=imagingvideo['value']
-    try:
-        lastDayAvgImaging=imagingVideoSum/len(imagingTransition)
-    except:
-        lastDayAvgImaging=0
-    #오늘
-    start=timezone.now()-datetime.timedelta(days=1)
-    start=start.strftime("%Y-%m-%d")
-    end=timezone.now().strftime("%Y-%m-%d")
-    imagingTransition = list(Video.objects.all()\
-        .filter(videokeywordnew__keyword__contains=keyword, upload_time__range=(start,end))\
-        .extra(select={'date': "TO_CHAR(upload_time, 'YYYY-MM-DD')"}).values('date') \
-        .annotate(value=Count('idx')))
-    imagingVideoSum=0
-    for imagingvideo in imagingTransition:
-        imagingVideoSum+=imagingvideo['value']
-    try:
-        thisDayAvgImaging=imagingVideoSum/len(imagingTransition)
-    except:
-        thisDayAvgImaging=0
-    try:
-        dayAvgIncrease = (thisDayAvgImaging - lastDayAvgImaging)/lastDayAvgImaging * 100
-    except:
-        dayAvgIncrease=0
-    return weekAvgIncrease,dayAvgIncrease
+#     #전날
+#     start=timezone.now()-datetime.timedelta(days=2)
+#     start=start.strftime("%Y-%m-%d")
+#     end=(timezone.now()-datetime.timedelta(days=1)).strftime("%Y-%m-%d")
+#     imagingTransition = list(Video.objects.all()\
+#         .filter(videokeywordnew__keyword__contains=keyword, upload_time__range=(start,end))\
+#         .extra(select={'date': "TO_CHAR(upload_time, 'YYYY-MM-DD')"}).values('date') \
+#         .annotate(value=Count('idx')))
+#     imagingVideoSum=0
+#     for imagingvideo in imagingTransition:
+#         imagingVideoSum+=imagingvideo['value']
+#     try:
+#         lastDayAvgImaging=imagingVideoSum/len(imagingTransition)
+#     except:
+#         lastDayAvgImaging=0
+#     #오늘
+#     start=timezone.now()-datetime.timedelta(days=1)
+#     start=start.strftime("%Y-%m-%d")
+#     end=timezone.now().strftime("%Y-%m-%d")
+#     imagingTransition = list(Video.objects.all()\
+#         .filter(videokeywordnew__keyword__contains=keyword, upload_time__range=(start,end))\
+#         .extra(select={'date': "TO_CHAR(upload_time, 'YYYY-MM-DD')"}).values('date') \
+#         .annotate(value=Count('idx')))
+#     imagingVideoSum=0
+#     for imagingvideo in imagingTransition:
+#         imagingVideoSum+=imagingvideo['value']
+#     try:
+#         thisDayAvgImaging=imagingVideoSum/len(imagingTransition)
+#     except:
+#         thisDayAvgImaging=0
+#     try:
+#         dayAvgIncrease = (thisDayAvgImaging - lastDayAvgImaging)/lastDayAvgImaging * 100
+#     except:
+#         dayAvgIncrease=0
+#     return weekAvgIncrease,dayAvgIncrease
 
 
 @api_view(['GET'])
@@ -129,7 +129,7 @@ def keyword_data(request):
             topViewVideo.append(hv.video_idx)     
         topViewVideoSerializer=VideoSerializer(topViewVideo,many=True)
         # return Response([imagingTransition,keywordCountSerializer.data])
-        return Response({"type":"영상","keyword":[{"name":keyword,"popular":avgImaging,"wordmap":keywordCountSerializer.data,"lines":imagingTransition,"video":topViewVideoSerializer.data}]})
+        return Response({"type":"영상","keyword":[{"name":keyword,"popular":avgImaging,"wordmap":{"name":keyword,"children":keywordCountSerializer.data},"lines":imagingTransition,"video":{"type":"analysis","data":topViewVideoSerializer.data}}]})
     elif (search == '인기' and keyword):
         #전주
         # start=timezone.now()-datetime.timedelta(days=14)
@@ -306,7 +306,7 @@ def keyword_data(request):
         keywordCountSerializer=KeywordCountSerializer(keywords,many=True)
         
         # return Response([popularDict,keywordCountSerializer.data])
-        return Response({"type":"인기","keyword":[{"name":keyword,"popular":avgPupularDict,"wordmap":keywordCountSerializer.data,"lines":popularTransition,"video":popularVideoSerializer.data}]})
+        return Response({"type":"인기","keyword":[{"name":keyword,"popular":avgPupularDict,"wordmap":{"name":keyword,"children":keywordCountSerializer.data},"lines":popularTransition,"video":{"type":"analysis","data":popularVideoSerializer.data}}]})
 
     return Response("")
 @api_view(['GET'])

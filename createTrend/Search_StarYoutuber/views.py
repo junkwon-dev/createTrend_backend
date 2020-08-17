@@ -49,7 +49,6 @@ def channelinfo(request,pk):
         counter=collections.Counter(keywords)
         keywords=dict(counter.most_common(n=10))
         keywords=[{"name":key,"value":keywords[key]} for key in keywords.keys()]
-        print(keywords)
         class Keyword(object):
             def __init__(self,keyword):
                 self.name = keyword['name']
@@ -63,7 +62,8 @@ def channelinfo(request,pk):
         for channelSubscirber in channelSubscribers:
             date=channelSubscirber.check_time
             value=channelSubscirber.subscriber_num
-            ChannelSubscriber.append({"date":date,"value":value})
+            date_value=str(date)[:10]
+            ChannelSubscriber.append({"date":date_value,"value":value})
         keywordCountSerializer=KeywordCountSerializer(keywords,many=True)
         topChannelSubscriberSerializer=ChannelSubscriberSerializer(topChannelSubscriber,many=True)
         channelSerializer = ChannelInfoSerializer(channel)
@@ -96,7 +96,6 @@ def channelperioddata(request,pk):
             counter=collections.Counter(keywords)
             keywords=dict(counter.most_common(n=10))
             keywords=[{"name":key,"value":keywords[key]} for key in keywords.keys()]
-            print(keywords)
             class Keyword(object):
                 def __init__(self,keyword):
                     self.name = keyword['name']
