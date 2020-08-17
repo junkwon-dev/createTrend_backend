@@ -23,9 +23,17 @@ def channelinfo(request,pk):
     except Channel.DoesNotExist:
         return Response(status = status.HTTP_404_NOT_FOUND)
     if request.method == 'GET':
-        topViewVideos=channel.video\
-            .annotate(Max('videoviews__check_time'))\
-            .order_by('-videoviews__views')[:5]
+        # topViewVideos=channel.video\
+        #     .annotate(Max('videoviews__check_time'))\
+        #     .order_by('-videoviews__views')[:5]
+        videos = channel.video\
+                .annotate(hottest_video_made_at=Max('videoviews__check_time')) 
+        hottest_videos = VideoViews.objects.filter(
+            check_time__in=[v.hottest_video_made_at for v in videos]
+            ).order_by('-views')[:5]
+        topViewVideos=[]
+        for hv in hottest_videos:
+            topViewVideos.append(hv.video_idx)
             
         topChannelSubscriber = channel.channelsubscriber\
             .order_by('-check_time')[:1]
