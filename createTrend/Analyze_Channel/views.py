@@ -359,4 +359,4 @@ def analyze_channel(request):
     
     topImagingKeywordCountSerializer=KeywordCountSerializer(topImagingKeywords,many=True)
     topkeywordCountSerializer=KeywordCountSerializer(topPopularKeywords,many=True)
-    return Response({"type":"인기","data":topkeywordCountSerializer.data,"type":"영상화","data":topImagingKeywordCountSerializer.data})
+    return Response([{"type":"인기","data":topkeywordCountSerializer.data},{"type":"영상화","data":topImagingKeywordCountSerializer.data}])
