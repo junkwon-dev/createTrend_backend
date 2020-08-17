@@ -129,7 +129,7 @@ def keyword_data(request):
             topViewVideo.append(hv.video_idx)     
         topViewVideoSerializer=VideoSerializer(topViewVideo,many=True)
         # return Response([imagingTransition,keywordCountSerializer.data])
-        return Response({"type":"영상","keyword":[{"name":keyword,"popular":avgImaging,"wordmap":{"name":keyword,"children":keywordCountSerializer.data},"lines":imagingTransition,"video":{"type":"analysis","data":topViewVideoSerializer.data}}]})
+        return Response({"type":"영상","keyword":[{"name":keyword,"popular":avgImaging,"wordmap":{"name":keyword,"children":keywordCountSerializer.data},"lines":{'type':"영상화 추이",'data':imagingTransition},"video":{"type":"analysis","data":topViewVideoSerializer.data}}]})
     elif (search == '인기' and keyword):
         #전주
         # start=timezone.now()-datetime.timedelta(days=14)
@@ -306,7 +306,7 @@ def keyword_data(request):
         keywordCountSerializer=KeywordCountSerializer(keywords,many=True)
         
         # return Response([popularDict,keywordCountSerializer.data])
-        return Response({"type":"인기","keyword":[{"name":keyword,"popular":avgPupularDict,"wordmap":{"name":keyword,"children":keywordCountSerializer.data},"lines":popularTransition,"video":{"type":"analysis","data":popularVideoSerializer.data}}]})
+        return Response({"type":"인기","keyword":[{"name":keyword,"popular":avgPupularDict,"wordmap":{"name":keyword,"children":keywordCountSerializer.data},"lines":{"type":"인기도 추이","data":popularTransition},"video":{"type":"analysis","data":popularVideoSerializer.data}}]})
 
     return Response("")
 @api_view(['GET'])
