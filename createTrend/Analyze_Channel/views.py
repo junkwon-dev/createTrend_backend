@@ -297,10 +297,14 @@ def keyword_data(request):
                 self.name = keyword['name']
                 self.value=keyword['value']
         keywords=[Keyword(keyword=keyword) for keyword in keywords]
-        
+
         popularVideo=Video.objects.all()\
             .filter(videokeywordnew__keyword__contains=keyword, upload_time__range=(start,end))\
-            .order_by(F('popularity').desc(nulls_last=True))[:5]        
+            .annotate(popular_video_made_at=Max('upload_time'))
+        popularVideo=Video.objects.filter(
+            upload_time__in=[v.popular_video_made_at for v in popularVideo]
+            ).order_by(F('popularity').desc(nulls_last=True))[:5]
+            # .order_by(F('popularity').desc(nulls_last=True))[:5]        
         popularVideoSerializer=VideoSerializer(popularVideo,many=True)
         
         keywordCountSerializer=KeywordCountSerializer(keywords,many=True)
