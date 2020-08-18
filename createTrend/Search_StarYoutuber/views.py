@@ -86,9 +86,16 @@ def channelperioddata(request,pk):
         start=request.query_params.get('start')
         end=request.query_params.get('end')
         if(start and end):
-            videos = channel.video.filter(upload_time__range=(start,end)).order_by('-videoviews__views').prefetch_related('videokeywordnew')[:5]
+            videos = channel.video.filter(upload_time__range=(start,end))\
+                .annotate(hottest_video_made_at=Max('videoviews__check_time')) 
+            
+            hottest_videos = VideoViews.objects.filter(
+                check_time__in=[v.hottest_video_made_at for v in videos]
+                ).order_by('-views')[:5]
+            topViewVideos=[]
+            for hv in hottest_videos:
+                topViewVideos.append(hv.video_idx)
             keywords=[]
-
             for video in videos:
                 keyword=[vk.keyword for vk in video.videokeywordnew.all()]
                 keywords.append(keyword)
@@ -104,7 +111,7 @@ def channelperioddata(request,pk):
 
 
             keywordCountSerializer=KeywordCountSerializer(keywords,many=True)
-            videoSerializer=VideoSerializer(videos,many=True)
+            videoSerializer=VideoSerializer(topViewVideos,many=True)
             return Response({'video':{"type":"analysis","data":videoSerializer.data}, 'keyword':{"pie":keywordCountSerializer.data}})
         else:
             start=timezone.now()-datetime.timedelta(days=14)
