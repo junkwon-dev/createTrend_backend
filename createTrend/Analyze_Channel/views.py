@@ -338,7 +338,6 @@ def analyze_channel(request):
     end=timezone.now().strftime("%Y-%m-%d")
     imagingTransitionKeyword = list(Video.objects.all()\
         .filter(upload_time__range=(start,end)).prefetch_related('videokeywordnew'))
-    
     topImagingKeywords=[]
     for imagingkeywordvideo in imagingTransitionKeyword:
         keyword = [keywords.keyword for keywords in imagingkeywordvideo.videokeywordnew.all()]
