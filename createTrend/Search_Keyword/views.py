@@ -129,7 +129,7 @@ def keyword(request):
             recentVideoSerializer = RecentVideoSerializer(recentVideo,many=True)
             return Response({'video':[{"type":"analysis","data":topVideoSerializer.data},\
                 {"type":"aside","data":recentVideoSerializer.data}], 'wordmap':{'name':search,'children':keywordCountSerializer.data}\
-                    ,"lines":[{"type":"영상화 키워드","data":imagingTransition},{"type":"인기 키워드","data":subscribers}]\
+                    ,"lines":[{"type":"영상화 추이","data":imagingTransition},{"type":"인기도 추이","data":subscribers}]\
                     ,"keyword":[{"type":"인기 키워드","keyword":topkeywordCountSerializer.data},{"type":"영상화 키워드","keyword":topImagingKeywordCountSerializer.data}]}) 
         else:
             paginator = PageNumberPagination()
