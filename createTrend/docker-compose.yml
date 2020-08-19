@@ -1,0 +1,26 @@
+version: '3.5'
+
+services:
+  nginx:
+    image: nginx:latest
+    ports:
+      - "80:80"
+    volumes:
+      - .:/createTrend
+      - ./config/nginx:/etc/nginx/conf.d
+      - static_volume:/createTrend/static/
+    depends_on:
+      - django
+  django:
+    build: 
+      context: .
+      dockerfile: Dockerfile
+    command: echo yes | python manage.py collectstatic
+    command: gunicorn createTrend.wsgi:application --bind 0.0.0.0:8000
+    volumes:
+      - .:/createTrend
+      - static_volume:/createTrend/static/
+    expose:
+      - "8000"
+volumes:
+  static_volume:

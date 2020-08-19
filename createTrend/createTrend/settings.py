@@ -23,9 +23,9 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SECRET_KEY = '123-1l927q&heo4x)at)im!@(3pttnodz%z6yg2c7zy7(m!8dy'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
-ALLOWED_HOSTS = ['ec2-13-124-107-195.ap-northeast-2.compute.amazonaws.com','127.0.0.1']
+ALLOWED_HOSTS = ['django']
 
 
 # Application definition
@@ -130,4 +130,6 @@ USE_TZ = False
 # https://docs.djangoproject.com/en/3.0/howto/static-files/
 
 STATIC_URL = '/static/'
+STATIC_ROOT = os.path.join(BASE_DIR, "static")
+STATICFILES_DIRS = (os.path.join(BASE_DIR, 'static'),)
 CORS_ORIGIN_ALLOW_ALL = True
