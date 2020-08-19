@@ -18,7 +18,7 @@ from django.urls import path, include
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('keyword_search/', include('Search_Keyword.urls')),
-    path('youtuber_search/',include('Search_StarYoutuber.urls')),
-    path('channel_analyze/',include('Analyze_Channel.urls')),
+    path('api/keyword_search/', include('Search_Keyword.urls')),
+    path('api/youtuber_search/',include('Search_StarYoutuber.urls')),
+    path('api/channel_analyze/',include('Analyze_Channel.urls')),
 ]
