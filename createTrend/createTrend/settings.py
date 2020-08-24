@@ -42,6 +42,7 @@ INSTALLED_APPS = [
     'Search_StarYoutuber',
     'corsheaders',
     'Analyze_Channel',
+    'drf_yasg',
 ]
 REST_FRAMEWORK = {
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
