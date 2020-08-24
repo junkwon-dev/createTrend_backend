@@ -10,14 +10,29 @@ from Search_Keyword.serializers import ChannelListSerializer, VideoKeywordSerial
 from .models import Channel, VideoKeywordNew, Video, VideoViews,ChannelSubscriber
 from rest_framework.response import Response
 import datetime, itertools, collections
+from drf_yasg import openapi
+from drf_yasg.utils import swagger_auto_schema
+
 # from Search_Keyword.serializers import topComment
 # Create your views here.
 # class topCommentViewSet(viewsets.ModelViewSet):
 #     queryset = User.objects.all()
 #     serializer_class = UserSerializer
+param_search_hint = openapi.Parameter(
+        'search',
+        openapi.IN_QUERY,
+        description='검색하고 싶은 키워드를 입력하세요.',
+        type=openapi.TYPE_STRING
+    )
 
+@swagger_auto_schema(method='get',manual_parameters=[param_search_hint])
 @api_view(['GET'])
 def keyword(request):
+    '''
+    키워드 검색 API
+    ---
+    
+    '''
     if request.method == 'GET':
         search=request.query_params.get('search')
         if search:
@@ -72,17 +87,17 @@ def keyword(request):
                 .filter(videokeywordnew__keyword__contains=search, upload_time__range=(start,end))\
                 .extra(select={'date': "TO_CHAR(upload_time, 'YYYY-MM-DD')"}).values('date') \
                 .annotate(value=Sum('videoviews__views')))
-            popularTranstitionSubscriber = list(Video.objects.all()\
+            popularTranstitionSubscriber = Video.objects.prefetch_related('channel_idx','channel_idx__channelsubscriber')\
                 .filter(videokeywordnew__keyword__contains=search, upload_time__range=(start,end))\
-                .extra(select={'date': "TO_CHAR(upload_time, 'YYYY-MM-DD')"}).values('date','channel_idx'))
-            subscribers={}
+                .extra(select={'date': "TO_CHAR(upload_time, 'YYYY-MM-DD')"})
+            subscribers=[]
             for video in popularTranstitionSubscriber:
-                subscriber = ChannelSubscriber.objects.filter(channel_idx=video['channel_idx'])
-                subscriber_num=subscriber[0].subscriber_num
-                if video['date'] in subscribers:
-                    subscribers[video['date']]=int(subscribers[video['date']])+int(subscriber_num)
-                else:
-                    subscribers[video['date']]=int(subscriber_num)
+                # print(video)
+                subscriber = video.channel_idx.channelsubscriber.first().subscriber_num
+                # print(subscriber_num)
+
+                subscribers.append({video.date:int(subscriber)})
+                print('a')
             subdict={}
             for i in range(len(popularTranstitionViews)):
                 subdict[popularTranstitionViews[i]['date']]=popularTranstitionViews[i]['value']/subscribers[popularTranstitionViews[i]['date']]*100
@@ -96,7 +111,7 @@ def keyword(request):
                 .filter(videokeywordnew__keyword__contains=search, upload_time__range=(start,end))\
                 .order_by('-popularity').prefetch_related('videokeywordnew')[:100]
             topPopularKeywords=[]
-            for popularKeyword in popularTopKeyword:
+            for popularKeyword in popularTopKeyword.iterator():
                 # print(popularKeyword.videokeywordnew.all())
                 keyword = [popkeywords.keyword for popkeywords in popularKeyword.videokeywordnew.all()]
                 topPopularKeywords.append(keyword)
@@ -109,7 +124,7 @@ def keyword(request):
                 pass
             topPopularKeywords=[{"name":key,"value":topPopularKeywords[key]} for key in topPopularKeywords.keys()]
             topPopularKeywords=[Keyword(keyword=keyword) for keyword in topPopularKeywords]
-            imagingTransitionKeyword = list(Video.objects.all()\
+            imagingTransitionKeyword = list(Video.objects.prefetch_related('videokeywordnew')\
                 .filter(videokeywordnew__keyword__contains=search, upload_time__range=(start,end)))
             
             topImagingKeywords=[]
@@ -129,7 +144,7 @@ def keyword(request):
             topImagingKeywordCountSerializer=KeywordCountSerializer(topImagingKeywords,many=True)
             topkeywordCountSerializer=KeywordCountSerializer(topPopularKeywords,many=True)
             keywordCountSerializer=KeywordCountSerializer(keywords,many=True)
-                        
+            print('e')   
             topVideoSerializer = TopVideoSerializer(topVideo,many=True)
             recentVideoSerializer = RecentVideoSerializer(recentVideo,many=True)
             return Response({'video':[{"type":"analysis","data":topVideoSerializer.data},\
