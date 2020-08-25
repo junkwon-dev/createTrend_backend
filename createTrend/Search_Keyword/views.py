@@ -90,14 +90,16 @@ def keyword(request):
             popularTranstitionSubscriber = Video.objects.prefetch_related('channel_idx','channel_idx__channelsubscriber')\
                 .filter(videokeywordnew__keyword__contains=search, upload_time__range=(start,end))\
                 .extra(select={'date': "TO_CHAR(upload_time, 'YYYY-MM-DD')"})
-            subscribers=[]
+            ChannelSubscriberQuery=ChannelSubscriber.objects.all()
+            subscribers={}
             for video in popularTranstitionSubscriber:
                 # print(video)
                 subscriber = video.channel_idx.channelsubscriber.first().subscriber_num
                 # print(subscriber_num)
-
-                subscribers.append({video.date:int(subscriber)})
-                print('a')
+                if video.date in subscribers:
+                    subscribers[video.date]+=int(subscriber)
+                else:
+                    subscribers.update({video.date:int(subscriber)})
             subdict={}
             for i in range(len(popularTranstitionViews)):
                 subdict[popularTranstitionViews[i]['date']]=popularTranstitionViews[i]['value']/subscribers[popularTranstitionViews[i]['date']]*100
