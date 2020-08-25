@@ -50,6 +50,28 @@ Docker로 구성된 서버에 Dockerfile,Docker-compose로 모든것을 정리�
 
 ## API
 
+### 전체 채널 API
+
+<img width="631" alt="스크린샷 2020-08-25 오후 8 14 30" src="https://user-images.githubusercontent.com/48988862/91167887-a2330600-e70f-11ea-88e0-b82e249a626b.png">
+
+<img width="660" alt="스크린샷 2020-08-25 오후 8 14 18" src="https://user-images.githubusercontent.com/48988862/91167879-9f381580-e70f-11ea-86e5-69a52a72d011.png">
+
+### 키워드 검색 API
+
+<img width="652" alt="스크린샷 2020-08-25 오후 2 40 01" src="https://user-images.githubusercontent.com/48988862/91161553-ddc8d280-e705-11ea-9366-85035b0e8880.png">
+
+### 채널 정보/기간 내 정보 API
+
+<img width="651" alt="스크린샷 2020-08-25 오후 2 40 43" src="https://user-images.githubusercontent.com/48988862/91161558-ddc8d280-e705-11ea-9d6f-751c241baf20.png">
+
+<img width="660" alt="스크린샷 2020-08-25 오후 2 43 58" src="https://user-images.githubusercontent.com/48988862/91161562-def9ff80-e705-11ea-964d-835328c172ea.png">
+
+
+
+
+
+
+
 
 
 ## 사용된 도구
