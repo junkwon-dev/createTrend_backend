@@ -31,7 +31,7 @@ def keyword(request):
     '''
     키워드 검색 API
     ---
-    
+    검색한 키워드와 관련된 최근 영상과, 인기있는 영상, 관련 키워드 워드맵 정보 등을 제공하는 api입니다.
     '''
     if request.method == 'GET':
         search=request.query_params.get('search')

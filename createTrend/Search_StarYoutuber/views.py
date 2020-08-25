@@ -12,11 +12,20 @@ from rest_framework.pagination import PageNumberPagination
 from .models import Channel, ChannelSubscriber, VideoViews,Video
 from itertools import chain
 from django.db.models import Max 
+from drf_yasg import openapi
+from drf_yasg.utils import swagger_auto_schema
+
 import collections, itertools, datetime
+
 # Create your views here.
 
 @api_view(['GET'])
 def channelinfo(request,pk):
+    '''
+    채널 정보 API
+    ---
+    해당되는 채널의 정보, 채널을 분석해서 제공하는 API입니다.
+    '''
     try:
         channel = Channel.objects\
             .get(pk=pk)
@@ -75,8 +84,27 @@ def channelinfo(request,pk):
         return Response({'channelInfo':channelinfodict, 'video':{"type":"aside","data":topViewVideoSerializer.data}\
             ,'keyword':{'pie':keywordCountSerializer.data},'line':{"type":"구독자수 추이","data":ChannelSubscriber}})
     
+param_channelperioddata_start_hint = openapi.Parameter(
+        'start',
+        openapi.IN_QUERY,
+        description='기간 내의 영상을 검색합니다. 시작 날짜를 YYYY-mm-dd형태로 입력하세요.',
+        type=openapi.TYPE_STRING
+    )
+param_channelperioddata_end_hint = openapi.Parameter(
+        'end',
+        openapi.IN_QUERY,
+        description='기간 내의 영상을 검색합니다. 마지막 날짜를 YYYY-mm-dd형태로 입력하세요.',
+        type=openapi.TYPE_STRING
+)
+
+@swagger_auto_schema(method='get',manual_parameters=[param_channelperioddata_start_hint,param_channelperioddata_end_hint])
 @api_view(['GET'])
 def channelperioddata(request,pk):
+    '''
+    채널의 기간 내 DATA API
+    ---
+    해당 채널에서 기간을 설정하면 그 기간 내 인기 영상, 구독자 수 추이 등을 제공하는 API입니다.
+    '''
     try:
         channel = Channel.objects\
             .get(pk=pk)
@@ -122,7 +150,12 @@ def channelperioddata(request,pk):
             return Response(channelSubscriberSerializer.data)
 
 @api_view(['GET'])
-def channellist(request):
+def channellist(request): 
+    '''
+    채널리스트 API
+    ---
+    전체 채널의 목록을 보여주는 API입니다.
+    '''
     paginator = PageNumberPagination()
     paginator.page_size = 10
     queryset = Channel.objects.all()

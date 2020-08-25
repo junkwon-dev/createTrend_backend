@@ -7,6 +7,8 @@ from django.db.models import F, Count, Sum, Max
 import datetime, itertools, collections
 from .models import Channel, VideoKeywordNew, Video, ChannelSubscriber, VideoViews
 from .serializers import VideoKeywordSerializer, KeywordCountSerializer,VideoSerializer
+from drf_yasg import openapi
+from drf_yasg.utils import swagger_auto_schema
 # Create your views here.
 
 # def imagingIncreaseRate(keyword):
@@ -81,9 +83,27 @@ from .serializers import VideoKeywordSerializer, KeywordCountSerializer,VideoSer
 #         dayAvgIncrease=0
 #     return weekAvgIncrease,dayAvgIncrease
 
+param_keyword_data_search_hint = openapi.Parameter(
+        'search',
+        openapi.IN_QUERY,
+        description='영상화 혹은 인기 키워드를 검색합니다. 영상화 혹은 인기 를 입력하세요.',
+        type=openapi.TYPE_STRING
+    )
+param_keyword_data_keyword_hint = openapi.Parameter(
+        'keyword',
+        openapi.IN_QUERY,
+        description='검색하고 싶은 키워드를 입력하세요.',
+        type=openapi.TYPE_STRING
+)
 
+@swagger_auto_schema(method='get',manual_parameters=[param_keyword_data_search_hint,param_keyword_data_keyword_hint])
 @api_view(['GET'])
 def keyword_data(request):
+    '''
+    전체 채널 인기,영상화 TOP10 키워드 API
+    ---
+    전체 채널 TOP10 키워드를 클릭할 때 키워드의 인기도, 영상화 수치, 추이 등을 제공하는 API입니다.
+    '''
     search=request.query_params.get('search')
     keyword=request.query_params.get('keyword')
     if (search == '영상화' and keyword):
@@ -313,8 +333,17 @@ def keyword_data(request):
         return Response({"type":"인기","keyword":[{"name":keyword,"popular":avgPupularDict,"wordmap":{"name":keyword,"children":keywordCountSerializer.data},"lines":{"type":"인기도 추이","data":popularTransition},"video":{"type":"analysis","data":popularVideoSerializer.data}}]})
 
     return Response("")
+
+
+
+
 @api_view(['GET'])
 def analyze_channel(request):
+    '''
+    전체 채널 인기,영상화 TOP10 키워드 API
+    ---
+    전체 채널 중 인기, 영상화 TOP 10 키워드를 제공하는 API입니다.
+    '''
     search=None
     start=timezone.now()-datetime.timedelta(days=14)
     start=start.strftime("%Y-%m-%d")
