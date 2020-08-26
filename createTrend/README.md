@@ -83,6 +83,8 @@ Docker로 구성된 서버에 Dockerfile,Docker-compose로 모든것을 정리�
 * [Gunicorn](https://gunicorn.org/) - 웹, 앱서버 통신 인터페이스
 
 
+## 글쓴이
+__권준(dydqja1013@naver.com)__
 
 ## 라이센스
 
