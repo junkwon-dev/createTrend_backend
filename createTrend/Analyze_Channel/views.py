@@ -111,14 +111,17 @@ def keyword_data(request):
         start=timezone.now()-datetime.timedelta(days=14)
         start=start.strftime("%Y-%m-%d")
         end=timezone.now().strftime("%Y-%m-%d")
-        imagingTransition = list(Video.objects.all()\
+        imagingTransition = list(Video.objects\
             .filter(videokeywordnew__keyword__contains=keyword, upload_time__range=(start,end))\
             .extra(select={'date': "TO_CHAR(upload_time, 'YYYY-MM-DD')"}).values('date') \
             .annotate(value=Count('idx')))
         imagingVideoSum=0
         for imagingvideo in imagingTransition:
             imagingVideoSum+=imagingvideo['value']
-        avgImaging=imagingVideoSum/len(imagingTransition)
+        try:
+            avgImaging=imagingVideoSum/len(imagingTransition)
+        except:
+            avgImaging=0
         keywordVideo=Video.objects.all()\
             .filter(videokeywordnew__keyword__contains=keyword, upload_time__range=(start,end))\
             .order_by('-upload_time')[:1000].prefetch_related('videokeywordnew')  
@@ -278,23 +281,25 @@ def keyword_data(request):
             .filter(videokeywordnew__keyword__contains=keyword, upload_time__range=(start,end))\
             .extra(select={'date': "TO_CHAR(upload_time, 'YYYY-MM-DD')"}).values('date') \
             .annotate(value=Sum('videoviews__views')))
-        popularTransitionSubscriber = list(Video.objects.all()\
+        popularTransitionSubscriber = list(Video.objects.prefetch_related('channel_idx','channel_idx__channelsubscriber')\
             .filter(videokeywordnew__keyword__contains=keyword, upload_time__range=(start,end))\
-            .extra(select={'date': "TO_CHAR(upload_time, 'YYYY-MM-DD')"}).values('date','channel_idx'))
+            .extra(select={'date': "TO_CHAR(upload_time, 'YYYY-MM-DD')"}))
         subscribers={}
         for video in popularTransitionSubscriber:
-            subscriber = ChannelSubscriber.objects.filter(channel_idx=video['channel_idx'])
-            subscriber_num=subscriber[0].subscriber_num
-            if video['date'] in subscribers:
-                subscribers[video['date']]=int(subscribers[video['date']])+int(subscriber_num)
+            subscriber = video.channel_idx.channelsubscriber.first().subscriber_num
+            if video.date in subscribers:
+                subscribers[video.date]+=int(subscriber)
             else:
-                subscribers[video['date']]=int(subscriber_num)
+                subscribers.update({video.date:int(subscriber)})
         popularDict={}
         popularDictSum=0
         for i in range(len(popularTransitionViews)):
             popularDict[popularTransitionViews[i]['date']]=popularTransitionViews[i]['value']/subscribers[popularTransitionViews[i]['date']]*100
             popularDictSum+=popularDict[popularTransitionViews[i]['date']]
-        avgPupularDict=popularDictSum/len(popularTransitionViews)
+        try:
+            avgPupularDict=popularDictSum/len(popularTransitionViews)
+        except:
+            avgPupularDict=0
         
         popularTransition=[]
         for subdictKey in popularDict.keys():
