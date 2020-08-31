@@ -59,9 +59,9 @@ def keyword(request):
             for hv in hottest_videos:
                 topVideo.append(hv.video_idx)
             # videos = channel.video.all().prefetch_related('videokeyword')
-            keywordVideo=Video.objects.all()\
+            keywordVideo=Video.objects.prefetch_related('videokeywordnew') \
                 .filter(videokeywordnew__keyword__contains=search, upload_time__range=(start,end))\
-                .order_by('-upload_time')[:1000].prefetch_related('videokeywordnew')  
+                .order_by('-upload_time')[:1000] 
             keywords=[]
 
             for video in keywordVideo:
