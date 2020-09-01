@@ -118,7 +118,7 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 SWAGGER_SETTINGS = {
-    "is_authenticated": False,  # Set to True to enforce user authentication,
+    'USE_SESSION_AUTH': False,  # Set to True to enforce user authentication,
 }
 
 # Internationalization
