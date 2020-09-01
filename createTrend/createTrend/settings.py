@@ -112,6 +112,9 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
+SWAGGER_SETTINGS = {
+    "is_authenticated": False,  # Set to True to enforce user authentication,
+}
 
 # Internationalization
 # https://docs.djangoproject.com/en/3.0/topics/i18n/
