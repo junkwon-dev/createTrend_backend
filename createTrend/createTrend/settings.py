@@ -118,7 +118,13 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 SWAGGER_SETTINGS = {
-    'USE_SESSION_AUTH': False,  # Set to True to enforce user authentication,
+    'SECURITY_DEFINITIONS': {
+        'api_key': {
+            'type': 'apiKey',
+            'in': 'header',
+            'name': 'Authorization'
+        }
+    },
 }
 
 # Internationalization
