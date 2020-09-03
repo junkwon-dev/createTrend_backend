@@ -26,6 +26,7 @@ services:
     expose:
       - "8000"
   react:
+    image: node:latest
     working_dir: /muna
     command: sh entrypoint.sh
     volumes:
