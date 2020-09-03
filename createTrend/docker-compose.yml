@@ -4,23 +4,31 @@ services:
   nginx:
     image: nginx:latest
     ports:
-      - "80:80"
+      - "80:8080"
     volumes:
-      - .:/createTrend
-      - ./config/nginx:/etc/nginx/conf.d
-      - static_volume:/createTrend/static/
+      - ./nginx/nginx-proxy.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./muna/build:/var/www/muna
+      - static_volume:/muna-4/createTrend/static/
     depends_on:
+      - react
       - django
   django:
     build: 
-      context: .
+      context: muna-4/createTrend
       dockerfile: Dockerfile
+    working_dir: /muna-4/createTrend
     command: echo yes | python manage.py collectstatic
     command: gunicorn createTrend.wsgi:application --bind 0.0.0.0:8000
     volumes:
-      - .:/createTrend
-      - static_volume:/createTrend/static/
+      - ./muna-4/createTrend:/muna-4/createTrend
+      - static_volume:/muna-4/createTrend/static/
+
     expose:
       - "8000"
+  react:
+    working_dir: /muna
+    command: sh entrypoint.sh
+    volumes:
+      - ./muna:/muna
 volumes:
   static_volume:
