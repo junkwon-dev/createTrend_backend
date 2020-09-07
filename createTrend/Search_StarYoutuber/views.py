@@ -48,7 +48,7 @@ def channelinfo(request,pk):
             .order_by('-check_time')[:1]
             
         
-        videos = channel.video.all().prefetch_related('videokeywordnew')
+        videos = channel.video.prefetch_related('videokeywordnew')
         keywords=[]
         
         for video in videos:

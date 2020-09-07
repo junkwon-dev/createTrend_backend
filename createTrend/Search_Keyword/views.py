@@ -9,7 +9,7 @@ from Search_Keyword.serializers import ChannelListSerializer, VideoKeywordSerial
     ,RecentVideoSerializer, KeywordCountSerializer
 from .models import Channel, VideoKeywordNew, Video, VideoViews,ChannelSubscriber
 from rest_framework.response import Response
-import datetime, itertools, collections
+import datetime, itertools, collections, time
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
 
@@ -34,6 +34,7 @@ def keyword(request):
     검색한 키워드와 관련된 최근 영상과, 인기있는 영상, 관련 키워드 워드맵 정보 등을 제공하는 api입니다.
     '''
     if request.method == 'GET':
+        start_time=time.time()
         search=request.query_params.get('search')
         if search:
             start=timezone.now()-datetime.timedelta(days=14)
@@ -146,9 +147,10 @@ def keyword(request):
             topImagingKeywordCountSerializer=KeywordCountSerializer(topImagingKeywords,many=True)
             topkeywordCountSerializer=KeywordCountSerializer(topPopularKeywords,many=True)
             keywordCountSerializer=KeywordCountSerializer(keywords,many=True)
-            print('e')   
             topVideoSerializer = TopVideoSerializer(topVideo,many=True)
             recentVideoSerializer = RecentVideoSerializer(recentVideo,many=True)
+            end_time=time.time()-start_time
+            print(f'response time : {end_time}')
             return Response({'video':[{"type":"analysis","data":topVideoSerializer.data},\
                 {"type":"aside","data":recentVideoSerializer.data}], 'wordmap':{'name':search,'children':keywordCountSerializer.data}\
                     ,"lines":[{"type":"영상화 추이","data":imagingTransition},{"type":"인기도 추이","data":subscribers}]\

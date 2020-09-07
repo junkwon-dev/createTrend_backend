@@ -4,7 +4,7 @@ from rest_framework.decorators import api_view
 from django.utils import timezone
 from datetime import datetime, timedelta
 from django.db.models import F, Count, Sum, Max
-import datetime, itertools, collections
+import datetime, itertools, collections, time
 from .models import Channel, VideoKeywordNew, Video, ChannelSubscriber, VideoViews
 from .serializers import VideoKeywordSerializer, KeywordCountSerializer,VideoSerializer
 from drf_yasg import openapi
@@ -107,6 +107,7 @@ def keyword_data(request):
     search=request.query_params.get('search')
     keyword=request.query_params.get('keyword')
     if (search == '영상화' and keyword):
+        start_time=time.time()
         # weekAvgIncrease,dayAvgIncrease=imagingIncreaseRate(keyword)
         start=timezone.now()-datetime.timedelta(days=14)
         start=start.strftime("%Y-%m-%d")
@@ -152,6 +153,8 @@ def keyword_data(request):
             topViewVideo.append(hv.video_idx)     
         topViewVideoSerializer=VideoSerializer(topViewVideo,many=True)
         # return Response([imagingTransition,keywordCountSerializer.data])
+        end_time=time.time()-start_time
+        print(f'response time : {end_time}')
         return Response({"type":"영상","keyword":[{"name":keyword,"popular":avgImaging,"wordmap":{"name":keyword,"children":keywordCountSerializer.data},"lines":{'type':"영상화 추이",'data':imagingTransition},"video":{"type":"analysis","data":topViewVideoSerializer.data}}]})
     elif (search == '인기' and keyword):
         #전주
@@ -273,7 +276,7 @@ def keyword_data(request):
         #     increaseRateDay=(lastdayAvgPupularDict-todayAvgPupularDict)/lastdayAvgPupularDict*100
         # except:
         #     increaseRateDay=0
-        
+        start_time=time.time()
         start=timezone.now()-datetime.timedelta(days=14)
         start=start.strftime("%Y-%m-%d")
         end=timezone.now().strftime("%Y-%m-%d")
@@ -333,6 +336,8 @@ def keyword_data(request):
         popularVideoSerializer=VideoSerializer(popularVideo,many=True)
         
         keywordCountSerializer=KeywordCountSerializer(keywords,many=True)
+        end_time=time.time()-start_time
+        print(f'response time : {end_time}')
         
         # return Response([popularDict,keywordCountSerializer.data])
         return Response({"type":"인기","keyword":[{"name":keyword,"popular":avgPupularDict,"wordmap":{"name":keyword,"children":keywordCountSerializer.data},"lines":{"type":"인기도 추이","data":popularTransition},"video":{"type":"analysis","data":popularVideoSerializer.data}}]})
@@ -349,6 +354,7 @@ def analyze_channel(request):
     ---
     전체 채널 중 인기, 영상화 TOP 10 키워드를 제공하는 API입니다.
     '''
+    start_time=time.time()
     search=None
     start=timezone.now()-datetime.timedelta(days=14)
     start=start.strftime("%Y-%m-%d")
@@ -357,9 +363,9 @@ def analyze_channel(request):
         def __init__(self,keyword):
             self.name = keyword['name']
             self.value=keyword['value']
-    popularTopKeyword = list(Video.objects.all()\
+    popularTopKeyword = list(Video.objects.prefetch_related('videokeywordnew')\
         .filter(upload_time__range=(start,end))\
-        .order_by(F('popularity').desc(nulls_last=True)).prefetch_related('videokeywordnew')[:1000])
+        .order_by(F('popularity').desc(nulls_last=True))[:1000])
     topPopularKeywords=[]
     for popularKeyword in popularTopKeyword:
         # print(VideoKeywordNew.objects.filter(video_idx=popularKeyword.idx))
@@ -374,8 +380,8 @@ def analyze_channel(request):
     start=timezone.now()-datetime.timedelta(days=7)
     start=start.strftime("%Y-%m-%d")
     end=timezone.now().strftime("%Y-%m-%d")
-    imagingTransitionKeyword = list(Video.objects.all()\
-        .filter(upload_time__range=(start,end)).prefetch_related('videokeywordnew'))
+    imagingTransitionKeyword = list(Video.objects.prefetch_related('videokeywordnew')\
+        .filter(upload_time__range=(start,end)))
     topImagingKeywords=[]
     for imagingkeywordvideo in imagingTransitionKeyword:
         keyword = [keywords.keyword for keywords in imagingkeywordvideo.videokeywordnew.all()]
@@ -396,4 +402,6 @@ def analyze_channel(request):
     
     topImagingKeywordCountSerializer=KeywordCountSerializer(topImagingKeywords,many=True)
     topkeywordCountSerializer=KeywordCountSerializer(topPopularKeywords,many=True)
+    end_time=time.time()-start_time
+    print(f'response time : {end_time}')
     return Response([{"type":"인기","keyword":topkeywordCountSerializer.data},{"type":"영상화","keyword":topImagingKeywordCountSerializer.data}])
