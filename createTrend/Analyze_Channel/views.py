@@ -112,6 +112,7 @@ def keyword_data(request):
         start=timezone.now()-datetime.timedelta(days=14)
         start=start.strftime("%Y-%m-%d")
         end=timezone.now().strftime("%Y-%m-%d")
+        
         imagingTransition = list(Video.objects\
             .filter(videokeywordnew__keyword__contains=keyword, upload_time__range=(start,end))\
             .extra(select={'date': "TO_CHAR(upload_time, 'YYYY-MM-DD')"}).values('date') \
@@ -280,13 +281,15 @@ def keyword_data(request):
         start=timezone.now()-datetime.timedelta(days=14)
         start=start.strftime("%Y-%m-%d")
         end=timezone.now().strftime("%Y-%m-%d")
-        popularTransitionViews = list(Video.objects.all()\
+        popularTransitionViews = list(Video.objects\
             .filter(videokeywordnew__keyword__contains=keyword, upload_time__range=(start,end))\
             .extra(select={'date': "TO_CHAR(upload_time, 'YYYY-MM-DD')"}).values('date') \
             .annotate(value=Sum('videoviews__views')))
         popularTransitionSubscriber = list(Video.objects.prefetch_related('channel_idx','channel_idx__channelsubscriber')\
             .filter(videokeywordnew__keyword__contains=keyword, upload_time__range=(start,end))\
             .extra(select={'date': "TO_CHAR(upload_time, 'YYYY-MM-DD')"}))
+        end_time=time.time()-start_time
+        print(f'response time : {end_time}')
         subscribers={}
         for video in popularTransitionSubscriber:
             subscriber = video.channel_idx.channelsubscriber.first().subscriber_num
@@ -303,11 +306,12 @@ def keyword_data(request):
             avgPupularDict=popularDictSum/len(popularTransitionViews)
         except:
             avgPupularDict=0
-        
+        end_time=time.time()-start_time
+        print(f'response time : {end_time}')
         popularTransition=[]
         for subdictKey in popularDict.keys():
             popularTransition.append({"date":subdictKey,"value":popularDict[subdictKey]})
-        keywordVideo=Video.objects.all()\
+        keywordVideo=Video.objects\
             .filter(videokeywordnew__keyword__contains=keyword, upload_time__range=(start,end))\
             .order_by('-upload_time')[:1000].prefetch_related('videokeywordnew')  
         keywords=[]
@@ -326,7 +330,7 @@ def keyword_data(request):
                 self.value=keyword['value']
         keywords=[Keyword(keyword=keyword) for keyword in keywords]
 
-        popularVideo=Video.objects.all()\
+        popularVideo=Video.objects\
             .filter(videokeywordnew__keyword__contains=keyword, upload_time__range=(start,end))\
             .annotate(popular_video_made_at=Max('upload_time'))
         popularVideo=Video.objects.filter(
