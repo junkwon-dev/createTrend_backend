@@ -377,7 +377,6 @@ def analyze_channel(request):
     topPopularKeywords=dict(counter.most_common(n=10))
     topPopularKeywords=[{"name":key,"value":topPopularKeywords[key]} for key in topPopularKeywords.keys()]
     topPopularKeywords=[Keyword(keyword=keyword) for keyword in topPopularKeywords]
-    print('a')
     #영상화 키워드
     start=timezone.now()-datetime.timedelta(days=7)
     start=start.strftime("%Y-%m-%d")
@@ -385,12 +384,10 @@ def analyze_channel(request):
     imagingTransitionKeyword = list(Video.objects.prefetch_related('videokeywordnew')\
         .filter(upload_time__range=(start,end))\
         .order_by(F('upload_time').desc(nulls_last=True))[:3000])
-    print('b')
     topImagingKeywords=[]
     for imagingkeywordvideo in imagingTransitionKeyword:
         keyword = [keywords.keyword for keywords in imagingkeywordvideo.videokeywordnew.all()]
         topImagingKeywords.append(keyword)
-    print('c')
     end_time=time.time()-start_time
     print(f'response time : {end_time}')
     topImagingKeywords=list(itertools.chain(*topImagingKeywords))
