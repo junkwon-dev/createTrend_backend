@@ -68,6 +68,9 @@ def keyword(request):
             for video in keywordVideo:
                 keyword=[videokeyword.keyword for videokeyword in video.videokeywordnew.all()]
                 keywords.append(keyword)
+            end_time=time.time()-start_time
+            print(f'response time : {end_time}')    
+            
             keywords=list(itertools.chain(*keywords))
             while search in keywords:
                 keywords.remove(search)
@@ -79,7 +82,8 @@ def keyword(request):
                     self.name = keyword['name']
                     self.value=keyword['value']
             keywords=[Keyword(keyword=keyword) for keyword in keywords]
-
+            end_time=time.time()-start_time
+            print(f'response time : {end_time}')
             imagingTransition = list(Video.objects.all()\
                 .filter(videokeywordnew__keyword__contains=search, upload_time__range=(start,end))\
                 .extra(select={'date': "TO_CHAR(upload_time, 'YYYY-MM-DD')"}).values('date') \
@@ -88,14 +92,13 @@ def keyword(request):
                 .filter(videokeywordnew__keyword__contains=search, upload_time__range=(start,end))\
                 .extra(select={'date': "TO_CHAR(upload_time, 'YYYY-MM-DD')"}).values('date') \
                 .annotate(value=Sum('videoviews__views')))
-            popularTranstitionSubscriber = Video.objects.prefetch_related('channel_idx','channel_idx__channelsubscriber')\
+            popularTranstitionSubscriber = Video.objects.select_related('channel_idx')\
                 .filter(videokeywordnew__keyword__contains=search, upload_time__range=(start,end))\
                 .extra(select={'date': "TO_CHAR(upload_time, 'YYYY-MM-DD')"})
-            ChannelSubscriberQuery=ChannelSubscriber.objects.all()
             subscribers={}
             for video in popularTranstitionSubscriber:
                 # print(video)
-                subscriber = video.channel_idx.channelsubscriber.first().subscriber_num
+                subscriber = video.channel_idx.subscriber_num
                 # print(subscriber_num)
                 if video.date in subscribers:
                     subscribers[video.date]+=int(subscriber)
@@ -105,6 +108,8 @@ def keyword(request):
             for i in range(len(popularTranstitionViews)):
                 subdict[popularTranstitionViews[i]['date']]=popularTranstitionViews[i]['value']/subscribers[popularTranstitionViews[i]['date']]*100
             subscribers=[]
+            end_time=time.time()-start_time
+            print(f'response time : {end_time}')
             for key in subdict.keys():
                 subscribers.append({"date":key,"value":subdict[key]})
                 # .annotate(value=Sum()))
@@ -118,6 +123,8 @@ def keyword(request):
                 # print(popularKeyword.videokeywordnew.all())
                 keyword = [popkeywords.keyword for popkeywords in popularKeyword.videokeywordnew.all()]
                 topPopularKeywords.append(keyword)
+            end_time=time.time()-start_time
+            print(f'response time : {end_time}')
             topPopularKeywords=list(itertools.chain(*topPopularKeywords))
             counter=collections.Counter(topPopularKeywords)
             topPopularKeywords=dict(counter.most_common(n=11))

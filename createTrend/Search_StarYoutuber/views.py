@@ -96,7 +96,7 @@ param_channelperioddata_end_hint = openapi.Parameter(
         description='기간 내의 영상을 검색합니다. 마지막 날짜를 YYYY-mm-dd형태로 입력하세요.',
         type=openapi.TYPE_STRING
 )
-``
+
 @swagger_auto_schema(method='get',manual_parameters=[param_channelperioddata_start_hint,param_channelperioddata_end_hint])
 @api_view(['GET'])
 def channelperioddata(request,pk):
