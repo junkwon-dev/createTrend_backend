@@ -11,4 +11,3 @@ RUN pip install --upgrade pip
 RUN pip install -r requirements.txt
 
 COPY . /muna-4/createTrend
-RUN python manage.py collectstatic

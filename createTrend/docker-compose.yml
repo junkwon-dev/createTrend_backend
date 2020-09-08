@@ -8,7 +8,7 @@ services:
     volumes:
       - ./nginx/nginx-proxy.conf:/etc/nginx/conf.d/default.conf:ro
       - ./muna/build:/var/www/muna
-      - static_volume:/muna-4/createTrend/static/
+      - ./muna-4/createTrend/static:/muna-4/createTrend/static/
     depends_on:
       - react
       - django
@@ -17,7 +17,7 @@ services:
       context: muna-4/createTrend
       dockerfile: Dockerfile
     working_dir: /muna-4/createTrend
-    command: echo yes | python manage.py collectstatic
+    command: sh entrypoint.sh
     command: gunicorn createTrend.wsgi:application --bind 0.0.0.0:8000
     volumes:
       - ./muna-4/createTrend:/muna-4/createTrend
