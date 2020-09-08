@@ -12,6 +12,7 @@ from rest_framework.response import Response
 import datetime, itertools, collections, time
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
+from django.db.models.functions import Coalesce
 
 # from Search_Keyword.serializers import topComment
 # Create your views here.
@@ -88,30 +89,34 @@ def keyword(request):
                 .filter(videokeywordnew__keyword__contains=search, upload_time__range=(start,end))\
                 .extra(select={'date': "TO_CHAR(upload_time, 'YYYY-MM-DD')"}).values('date') \
                 .annotate(value=Count('idx')))
-            popularTranstitionViews = list(Video.objects.all()\
-                .filter(videokeywordnew__keyword__contains=search, upload_time__range=(start,end))\
+            # popularTranstitionViews = list(Video.objects.all()\
+            #     .filter(videokeywordnew__keyword__contains=search, upload_time__range=(start,end))\
+            #     .extra(select={'date': "TO_CHAR(upload_time, 'YYYY-MM-DD')"}).values('date') \
+            #     .annotate(value=Sum('videoviews__views')))
+            # popularTranstitionSubscriber = Video.objects.select_related('channel_idx')\
+            #     .filter(videokeywordnew__keyword__contains=search, upload_time__range=(start,end))\
+            #     .extra(select={'date': "TO_CHAR(upload_time, 'YYYY-MM-DD')"})
+            # subscribers={}
+            # for video in popularTranstitionSubscriber:
+            #     # print(video)
+            #     subscriber = video.channel_idx.subscriber_num
+            #     # print(subscriber_num)
+            #     if video.date in subscribers:
+            #         subscribers[video.date]+=int(subscriber)
+            #     else:
+            #         subscribers.update({video.date:int(subscriber)})
+            # subdict={}
+            # for i in range(len(popularTranstitionViews)):
+            #     subdict[popularTranstitionViews[i]['date']]=popularTranstitionViews[i]['value']/subscribers[popularTranstitionViews[i]['date']]*100
+            popularTransitionQuery=list(Video.objects\
+                .filter(videokeywordnew__keyword__contains=keyword, upload_time__range=(start,end), popularity__isnull=False)\
                 .extra(select={'date': "TO_CHAR(upload_time, 'YYYY-MM-DD')"}).values('date') \
-                .annotate(value=Sum('videoviews__views')))
-            popularTranstitionSubscriber = Video.objects.select_related('channel_idx')\
-                .filter(videokeywordnew__keyword__contains=search, upload_time__range=(start,end))\
-                .extra(select={'date': "TO_CHAR(upload_time, 'YYYY-MM-DD')"})
-            subscribers={}
-            for video in popularTranstitionSubscriber:
-                # print(video)
-                subscriber = video.channel_idx.subscriber_num
-                # print(subscriber_num)
-                if video.date in subscribers:
-                    subscribers[video.date]+=int(subscriber)
-                else:
-                    subscribers.update({video.date:int(subscriber)})
-            subdict={}
-            for i in range(len(popularTranstitionViews)):
-                subdict[popularTranstitionViews[i]['date']]=popularTranstitionViews[i]['value']/subscribers[popularTranstitionViews[i]['date']]*100
+                .annotate(value=Coalesce(Sum('popularity'), 0)))
             subscribers=[]
             end_time=time.time()-start_time
             print(f'response time : {end_time}')
-            for key in subdict.keys():
-                subscribers.append({"date":key,"value":subdict[key]})
+            for subdict in popularTransitionQuery:
+                subscribers.append({"date":subdict['date'],"value":subdict['value']})
                 # .annotate(value=Sum()))
             #channel_subscriber__check_time=date&&channel_subscriber__channel_idx=channel_idx__idx
             # print(popularTranstitionSubscriber)

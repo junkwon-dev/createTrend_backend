@@ -13,6 +13,8 @@ class Channel(models.Model):
     thumbnail_url = models.CharField(max_length=200, blank=True, null=True)
     temp = models.CharField(max_length=100, blank=True, null=True)
     status = models.BooleanField(blank=True, null=True)
+    subscriber_num=models.IntegerField()
+    
     class Meta:
         managed = False
         db_table = 'channel'
@@ -28,7 +30,7 @@ class Video(models.Model):
     thumbnail_url = models.CharField(max_length=200, blank=True, null=True)
     thumbnail_processed = models.BooleanField(blank=True, null=True)
     forbidden = models.BooleanField(blank=True, null=True)
-    popularity = models.FloatField()
+    popularity = models.FloatField(blank=True,null=True)
     class Meta:
         managed = False
         db_table = 'video'
