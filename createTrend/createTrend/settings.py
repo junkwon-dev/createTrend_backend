@@ -43,12 +43,10 @@ INSTALLED_APPS = [
     'corsheaders',
     'Analyze_Channel',
     'drf_yasg',
+    'knox',
 ]
 REST_FRAMEWORK = {
-    'DEFAULT_AUTHENTICATION_CLASSES': (
-        'rest_framework.authentication.TokenAuthentication',
-        'rest_framework.authentication.SessionAuthentication'
-    ),
+    'DEFAULT_AUTHENTICATION_CLASSES': ("knox.auth.TokenAuthentication",),
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
     'PAGE_SIZE': 100
 }
