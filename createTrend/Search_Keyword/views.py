@@ -161,10 +161,26 @@ def keyword(request):
             keywordCountSerializer=KeywordCountSerializer(keywords,many=True)
             topVideoSerializer = TopVideoSerializer(topVideo,many=True)
             recentVideoSerializer = RecentVideoSerializer(recentVideo,many=True)
+            wordmapItems=keywordCountSerializer.data
+            # 색깔추가
+            for itemIndex in range(len(wordmapItems)):
+                if itemIndex==0:
+                    wordmapItems[itemIndex].update({'color': '#f9bf69'})
+                elif itemIndex==1:
+                    wordmapItems[itemIndex].update({'color': '#f65a5a'})
+                elif itemIndex==2:
+                    wordmapItems[itemIndex].update({'color': '#508ddc'})
+                elif itemIndex==3:
+                    wordmapItems[itemIndex].update({'color': '#f9bf69'})
+                elif itemIndex==4:
+                    wordmapItems[itemIndex].update({'color': '#f65a5a'})
+                else:
+                    wordmapItems[itemIndex].update({'color': '#508ddc'})
+                    
             end_time=time.time()-start_time
             print(f'response time : {end_time}')
             return Response({'video':[{"type":"analysis","data":topVideoSerializer.data},\
-                {"type":"aside","data":recentVideoSerializer.data}], 'wordmap':{'name':search,'children':keywordCountSerializer.data}\
+                {"type":"aside","data":recentVideoSerializer.data}], 'wordmap':{'name':search,'color':'#666','children':wordmapItems}\
                     ,"lines":[{"type":"영상화 추이","data":imagingTransition},{"type":"인기도 추이","data":subscribers}]\
                     ,"keyword":[{"type":"인기 키워드","keyword":topkeywordCountSerializer.data},{"type":"영상화 키워드","keyword":topImagingKeywordCountSerializer.data}]}) 
         else:
