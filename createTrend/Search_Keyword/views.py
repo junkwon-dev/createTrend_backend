@@ -41,25 +41,13 @@ def keyword(request):
             start=timezone.now()-datetime.timedelta(days=14)
             start=start.strftime("%Y-%m-%d")
             end=timezone.now().strftime("%Y-%m-%d")
-            # topVideo =Video.objects.all()\
-            #     .filter(videokeywordnew__keyword=search, upload_time__range=(start,end))\
-            #     .order_by('-videoviews__views')[:10]
+            topVideo =Video.objects\
+                .filter(videokeywordnew__keyword=search, upload_time__range=(start,end))\
+                .order_by('-popularity')[:5]
             recentVideo = Video.objects.all()\
                 .filter(videokeywordnew__keyword__contains=search, upload_time__range=(start,end))\
-                .annotate(recent_video_made_at=Max('upload_time'))
-                # .order_by('-upload_time')[:5]  
-            recentVideo=Video.objects.filter(
-                upload_time__in=[v.recent_video_made_at for v in recentVideo]
-                ).order_by('-upload_time')[:5]
-            videos = Video.objects.filter(videokeywordnew__keyword__contains=search, upload_time__range=(start,end))\
-                .annotate(hottest_video_made_at=Max('videoviews__check_time')) 
-            hottest_videos = VideoViews.objects.filter(
-                check_time__in=[v.hottest_video_made_at for v in videos]
-                ).order_by('-views')[:5]
-            # recentVideo = 
-            topVideo=[]
-            for hv in hottest_videos:
-                topVideo.append(hv.video_idx)
+                .order_by('-upload_time')[:5]  
+
             # videos = channel.video.all().prefetch_related('videokeyword')
             keywordVideo=Video.objects.prefetch_related('videokeywordnew') \
                 .filter(videokeywordnew__keyword__contains=search, upload_time__range=(start,end))\
@@ -89,25 +77,6 @@ def keyword(request):
                 .filter(videokeywordnew__keyword__contains=search, upload_time__range=(start,end))\
                 .extra(select={'date': "TO_CHAR(upload_time, 'YYYY-MM-DD')"}).values('date') \
                 .annotate(value=Count('idx')))
-            # popularTranstitionViews = list(Video.objects.all()\
-            #     .filter(videokeywordnew__keyword__contains=search, upload_time__range=(start,end))\
-            #     .extra(select={'date': "TO_CHAR(upload_time, 'YYYY-MM-DD')"}).values('date') \
-            #     .annotate(value=Sum('videoviews__views')))
-            # popularTranstitionSubscriber = Video.objects.select_related('channel_idx')\
-            #     .filter(videokeywordnew__keyword__contains=search, upload_time__range=(start,end))\
-            #     .extra(select={'date': "TO_CHAR(upload_time, 'YYYY-MM-DD')"})
-            # subscribers={}
-            # for video in popularTranstitionSubscriber:
-            #     # print(video)
-            #     subscriber = video.channel_idx.subscriber_num
-            #     # print(subscriber_num)
-            #     if video.date in subscribers:
-            #         subscribers[video.date]+=int(subscriber)
-            #     else:
-            #         subscribers.update({video.date:int(subscriber)})
-            # subdict={}
-            # for i in range(len(popularTranstitionViews)):
-            #     subdict[popularTranstitionViews[i]['date']]=popularTranstitionViews[i]['value']/subscribers[popularTranstitionViews[i]['date']]*100
             popularTransitionQuery=list(Video.objects\
                 .filter(videokeywordnew__keyword__contains=keyword, upload_time__range=(start,end), popularity__isnull=False)\
                 .extra(select={'date': "TO_CHAR(upload_time, 'YYYY-MM-DD')"}).values('date') \
