@@ -101,7 +101,11 @@ def keyword(request):
             print(f'response time : {end_time}')
             topPopularKeywords=list(itertools.chain(*topPopularKeywords))
             counter=collections.Counter(topPopularKeywords)
-            topPopularKeywords=dict(counter.most_common(n=10))
+            topPopularKeywords=dict(counter.most_common(n=11))
+            try:
+                del(topPopularKeywords[search])
+            except:
+                pass
             topPopularKeywords=[{"name":key,"value":topPopularKeywords[key]} for key in topPopularKeywords.keys()]
             topPopularKeywords=[Keyword(keyword=keyword) for keyword in topPopularKeywords]
             imagingTransitionKeyword = list(Video.objects.prefetch_related('videokeywordnew')\
@@ -113,11 +117,7 @@ def keyword(request):
                 topImagingKeywords.append(keyword)
             topImagingKeywords=list(itertools.chain(*topImagingKeywords))
             counter=collections.Counter(topImagingKeywords)
-            topImagingKeywords=dict(counter.most_common(n=11))
-            try:   
-                del(topImagingKeywords[search])
-            except:
-                pass
+            topImagingKeywords=dict(counter.most_common(n=10))
             topImagingKeywords=[{"name":key,"value":topImagingKeywords[key]} for key in topImagingKeywords.keys()]
             topImagingKeywords=[Keyword(keyword=keyword) for keyword in topImagingKeywords]
             
