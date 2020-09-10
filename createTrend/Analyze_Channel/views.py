@@ -164,7 +164,7 @@ def analyze_channel(request):
             self.value=keyword['value']
     popularTopKeyword = list(Video.objects.prefetch_related('videokeywordnew')\
         .filter(upload_time__range=(start,end))\
-        .order_by(F('popularity').desc(nulls_last=True))[:1000])
+        .order_by(F('popularity').desc(nulls_last=True))[:300])
     topPopularKeywords=[]
 
     for popularKeyword in popularTopKeyword:
@@ -182,7 +182,7 @@ def analyze_channel(request):
     end=timezone.now().strftime("%Y-%m-%d")
     imagingTransitionKeyword = list(Video.objects.prefetch_related('videokeywordnew')\
         .filter(upload_time__range=(start,end))\
-        .order_by(F('upload_time').desc(nulls_last=True))[:3000])
+        .order_by(F('upload_time').desc(nulls_last=True))[:100])
     topImagingKeywords=[]
     for imagingkeywordvideo in imagingTransitionKeyword:
         keyword = [keywords.keyword for keywords in imagingkeywordvideo.videokeywordnew.all()]
@@ -191,11 +191,7 @@ def analyze_channel(request):
     print(f'response time : {end_time}')
     topImagingKeywords=list(itertools.chain(*topImagingKeywords))
     counter=collections.Counter(topImagingKeywords)
-    topImagingKeywords=dict(counter.most_common(n=11))
-    try:   
-        del(topImagingKeywords[search])
-    except:
-        pass
+    topImagingKeywords=dict(counter.most_common(n=10))
     
     topImagingKeywords=[{"name":key,"value":topImagingKeywords[key]} for key in topImagingKeywords.keys()]
     topImagingKeywords=[Keyword(keyword=keyword) for keyword in topImagingKeywords]
