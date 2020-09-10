@@ -39,4 +39,6 @@ urlpatterns = [
     path('api/keyword_search/', include('Search_Keyword.urls')),
     path('api/youtuber_search/',include('Search_StarYoutuber.urls')),
     path('api/channel_analyze/',include('Analyze_Channel.urls')),
+    path("accounts/", include("accounts.urls")),
+    path("accounts/auth", include("knox.urls")),
 ]

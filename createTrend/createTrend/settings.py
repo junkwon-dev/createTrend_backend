@@ -44,6 +44,7 @@ INSTALLED_APPS = [
     'Analyze_Channel',
     'drf_yasg',
     'knox',
+    'accounts'
 ]
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': ("knox.auth.TokenAuthentication",),
