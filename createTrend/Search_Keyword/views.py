@@ -41,16 +41,13 @@ def keyword(request):
             start=timezone.now()-datetime.timedelta(days=14)
             start=start.strftime("%Y-%m-%d")
             end=timezone.now().strftime("%Y-%m-%d")
-            topVideo =Video.objects\
-                .filter(videokeywordnew__keyword=search, upload_time__range=(start,end))\
-                .order_by('-popularity')[:5]
             recentVideo = Video.objects.all()\
-                .filter(videokeywordnew__keyword__contains=search, upload_time__range=(start,end))\
+                .filter(videokeywordnew__keyword=search, upload_time__range=(start,end))\
                 .order_by('-upload_time')[:5]  
 
             # videos = channel.video.all().prefetch_related('videokeyword')
             keywordVideo=Video.objects.prefetch_related('videokeywordnew') \
-                .filter(videokeywordnew__keyword__contains=search, upload_time__range=(start,end))\
+                .filter(videokeywordnew__keyword=search, upload_time__range=(start,end))\
                 .order_by('-upload_time')[:1000] 
             keywords=[]
 
@@ -74,24 +71,24 @@ def keyword(request):
             end_time=time.time()-start_time
             print(f'response time : {end_time}')
             imagingTransition = list(Video.objects.all()\
-                .filter(videokeywordnew__keyword__contains=search, upload_time__range=(start,end))\
+                .filter(videokeywordnew__keyword=search, upload_time__range=(start,end))\
                 .extra(select={'date': "TO_CHAR(upload_time, 'YYYY-MM-DD')"}).values('date') \
                 .annotate(value=Count('idx')))
             popularTransitionQuery=list(Video.objects\
-                .filter(videokeywordnew__keyword__contains=keyword, upload_time__range=(start,end), popularity__isnull=False)\
+                .filter(videokeywordnew__keyword=search, upload_time__range=(start,end), popularity__isnull=False)\
                 .extra(select={'date': "TO_CHAR(upload_time, 'YYYY-MM-DD')"}).values('date') \
                 .annotate(value=Coalesce(Sum('popularity'), 0)))
+
             subscribers=[]
             end_time=time.time()-start_time
             print(f'response time : {end_time}')
             for subdict in popularTransitionQuery:
-                subscribers.append({"date":subdict['date'],"value":subdict['value']})
-                # .annotate(value=Sum()))
-            #channel_subscriber__check_time=date&&channel_subscriber__channel_idx=channel_idx__idx
-            # print(popularTranstitionSubscriber)
-            popularTopKeyword = Video.objects.all()\
-                .filter(videokeywordnew__keyword__contains=search, upload_time__range=(start,end))\
+                subscribers.append({"date":subdict['date'],"value":subdict['value']*100})
+
+            popularTopKeyword = Video.objects\
+                .filter(videokeywordnew__keyword=search, upload_time__range=(start,end))\
                 .order_by('-popularity').prefetch_related('videokeywordnew')[:100]
+            topVideo = popularTopKeyword[:5]
             topPopularKeywords=[]
             for popularKeyword in popularTopKeyword.iterator():
                 # print(popularKeyword.videokeywordnew.all())
@@ -101,15 +98,11 @@ def keyword(request):
             print(f'response time : {end_time}')
             topPopularKeywords=list(itertools.chain(*topPopularKeywords))
             counter=collections.Counter(topPopularKeywords)
-            topPopularKeywords=dict(counter.most_common(n=11))
-            try:
-                del(topPopularKeywords[search])
-            except:
-                pass
+            topPopularKeywords=dict(counter.most_common(n=10))
             topPopularKeywords=[{"name":key,"value":topPopularKeywords[key]} for key in topPopularKeywords.keys()]
             topPopularKeywords=[Keyword(keyword=keyword) for keyword in topPopularKeywords]
             imagingTransitionKeyword = list(Video.objects.prefetch_related('videokeywordnew')\
-                .filter(videokeywordnew__keyword__contains=search, upload_time__range=(start,end)))
+                .filter(videokeywordnew__keyword=search, upload_time__range=(start,end)))
             
             topImagingKeywords=[]
             for imagingkeywordvideo in imagingTransitionKeyword:
