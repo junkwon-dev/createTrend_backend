@@ -65,26 +65,16 @@ def keyword_data(request):
         # while keyword in keywords:
         #     keywords.remove(keyword)
         counter=collections.Counter(keywords)
-        keywords=dict(counter.most_common(n=7))
+        keywords=dict(counter.most_common(n=6))
         keywords=[{"name":key,"value":keywords[key]} for key in keywords.keys()]
         class Keyword(object):
             def __init__(self,keyword):
                 self.name = keyword['name']
                 self.value=keyword['value']
         keywords=[Keyword(keyword=keyword) for keyword in keywords]
-        keywordCountSerializer=KeywordCountSerializer(keywords,many=True)
-        videos = Video.objects.filter(videokeywordnew__keyword__contains=keyword, upload_time__range=(start,end))\
-            .annotate(hottest_video_made_at=Max('videoviews__check_time')) 
-        end_time=time.time()-start_time
-        print(f'response time : {end_time}')
-        hottest_videos = VideoViews.objects.filter(
-            check_time__in=[v.hottest_video_made_at for v in videos]
-            ).order_by('-views')[:5]
-        topViewVideo=[]
-        end_time=time.time()-start_time
-        print(f'response time : {end_time}')
-        for hv in hottest_videos:
-            topViewVideo.append(hv.video_idx)     
+        keywordCountSerializer=KeywordCountSerializer(keywords,many=True) 
+        topViewVideo=Video.objects.filter(videokeywordnew__keyword=keyword, upload_time__range=(start,end))\
+            .order_by('-views')[:5]
         topViewVideoSerializer=VideoSerializer(topViewVideo,many=True)
         # return Response([imagingTransition,keywordCountSerializer.data])
         
@@ -97,13 +87,6 @@ def keyword_data(request):
         start=timezone.now()-datetime.timedelta(days=30)
         start=start.strftime("%Y-%m-%d")
         end=timezone.now().strftime("%Y-%m-%d")
-        # popularTransitionViews = list(Video.objects\
-        #     .filter(videokeywordnew__keyword__contains=keyword, upload_time__range=(start,end))\
-        #     .extra(select={'date': "TO_CHAR(upload_time, 'YYYY-MM-DD')"}).values('date') \
-        #     .annotate(value=Sum('videoviews__views')))
-        # popularTransitionSubscriber = list(Video.objects.select_related('channel_idx')\
-        #     .filter(videokeywordnew__keyword__contains=keyword, upload_time__range=(start,end))\
-        #     .extra(select={'date': "TO_CHAR(upload_time, 'YYYY-MM-DD')"}))
         popularTransitionQuery=list(Video.objects\
             .filter(videokeywordnew__keyword__contains=keyword, upload_time__range=(start,end), popularity__isnull=False)\
             .extra(select={'date': "TO_CHAR(upload_time, 'YYYY-MM-DD')"}).values('date') \
@@ -111,24 +94,6 @@ def keyword_data(request):
 
 
         subscribers={}
-        # for video in popularTransitionSubscriber:
-        #     subscriber = video.channel_idx.subscriber_num
-        #     if video.date in subscribers:
-        #         subscribers[video.date]+=int(subscriber)
-        #     else:
-        #         subscribers.update({video.date:int(subscriber)})
-        #     print("A")
-        # popularDict={}
-        # popularDictSum=0
-        # iterViews=len(popularTransitionViews)
-        # for i in range(iterViews):
-        #     popularDict[popularTransitionViews[i]['date']]=popularTransitionViews[i]['value']/subscribers[popularTransitionViews[i]['date']]*100
-        #     popularDictSum+=popularDict[popularTransitionViews[i]['date']]
-        # try:
-        #     avgPupularDict=popularDictSum/len(popularTransitionViews)
-        # except:
-        #     avgPupularDict=0
-
         popularTransition=[]
         popularDictSum=0
         for subdictKey in popularTransitionQuery:
