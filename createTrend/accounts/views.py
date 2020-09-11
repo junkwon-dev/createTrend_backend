@@ -1,5 +1,5 @@
 from django.shortcuts import render
-
+from .models import UserInfo
 # Create your views here.
 from rest_framework import viewsets, permissions, generics, status
 from rest_framework.response import Response
@@ -54,9 +54,16 @@ class UserAPI(generics.RetrieveAPIView):
     def get_object(self):
         return self.request.user
 
-class UserInfoAPI(generics.RetrieveAPIView):
+class UserInfoUpdateAPI(generics.UpdateAPIView):
+    model = UserInfo
     permission_classes = [permissions.IsAuthenticated]
-    serializer_class=UserInfoSerializer
-    def get_object(self):
+    serializer_class = UserInfoSerializer
+    def get_object(self, queryset = None):
         return self.request.user
+    # def update(self, request, *args, **kwargs):
+    #     self.object = self.get_object()
+    #     serializer = self.get_serializer(date=request.data)
+    #     self.object.set_serializer.data.get
+
+    
     
