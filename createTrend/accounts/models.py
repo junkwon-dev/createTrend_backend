@@ -29,6 +29,15 @@ class UserInfo(models.Model):
     on_subscribe = models.BooleanField(blank=True, null=True)
     own_channel = models.ForeignKey(Channel, models.DO_NOTHING, db_column='own_channel', blank=True, null=True)
 
+    def set_phone(self, data):
+        self.phone=data
+
+    def set_on_subscribe(self,data):
+        self.on_subscribe=data
+
+    def set_own_channel(self,data):
+        self.own_channel=data
+
 
 @receiver(post_save, sender=User)
 def create_user_profile(sender, instance, created, **kwargs):

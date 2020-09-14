@@ -1,5 +1,5 @@
 from django.shortcuts import render
-from .models import UserInfo
+from .models import User
 # Create your views here.
 from rest_framework import viewsets, permissions, generics, status
 from rest_framework.response import Response
@@ -54,16 +54,29 @@ class UserAPI(generics.RetrieveAPIView):
     def get_object(self):
         return self.request.user
 
+
 class UserInfoUpdateAPI(generics.UpdateAPIView):
-    model = UserInfo
+    model = User
     permission_classes = [permissions.IsAuthenticated]
     serializer_class = UserInfoSerializer
-    def get_object(self, queryset = None):
-        return self.request.user
-    # def update(self, request, *args, **kwargs):
-    #     self.object = self.get_object()
-    #     serializer = self.get_serializer(date=request.data)
-    #     self.object.set_serializer.data.get
 
-    
-    
+    def get_object(self, queryset=None):
+        return self.request.user.userinfo
+
+    def update(self, request, *args, **kwargs):
+        user_info_object = self.get_object()
+        serializer = self.get_serializer(data=request.data)
+        if serializer.is_valid():
+            user_info_object.set_phone(serializer.data.get("phone"))
+            user_info_object.set_on_subscribe(serializer.data.get("on_subscribe"))
+            user_info_object.set_own_channel(serializer.data.get("own_channel"))
+            user_info_object.save()
+        response = {
+            'status': 'success',
+            'code': status.HTTP_200_OK,
+            'message': 'User info updated successfully',
+            'data': []
+        }
+        return Response(response)
+
+
