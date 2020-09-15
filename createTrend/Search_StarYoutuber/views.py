@@ -32,9 +32,6 @@ def channelinfo(request,pk):
     except Channel.DoesNotExist:
         return Response(status = status.HTTP_404_NOT_FOUND)
     if request.method == 'GET':
-        # topViewVideos=channel.video\
-        #     .annotate(Max('videoviews__check_time'))\
-        #     .order_by('-videoviews__views')[:5]
         videos = channel.video\
                 .annotate(hottest_video_made_at=Max('videoviews__check_time')) 
         hottest_videos = VideoViews.objects.filter(
@@ -80,7 +77,6 @@ def channelinfo(request,pk):
         subscribernum=topChannelSubscriberSerializer.data[0]['subscriber_num']
         channelinfodict=channelSerializer.data
         channelinfodict['subscriber']=subscribernum
-        # return Response({'ChannelInfo':channelSerializer.data, 'TopViewVideo':topViewVideoSerializer.data,'Keyword':videoKeywordSerializer.data})
         return Response({'channelInfo':channelinfodict, 'video':{"type":"aside","data":topViewVideoSerializer.data}\
             ,'keyword':{'pie':keywordCountSerializer.data},'line':{"type":"구독자수 추이","data":ChannelSubscriber}})
     

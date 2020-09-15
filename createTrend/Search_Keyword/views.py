@@ -43,9 +43,7 @@ def keyword(request):
             end=timezone.now().strftime("%Y-%m-%d")
             recentVideo = Video.objects.all()\
                 .filter(videokeywordnew__keyword=search, upload_time__range=(start,end))\
-                .order_by('-upload_time')[:5]  
-
-            # videos = channel.video.all().prefetch_related('videokeyword')
+                .order_by('-upload_time')[:5]
             keywordVideo=Video.objects.prefetch_related('videokeywordnew') \
                 .filter(videokeywordnew__keyword=search, upload_time__range=(start,end))\
                 .order_by('-upload_time')[:1000] 
