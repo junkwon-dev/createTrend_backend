@@ -4,19 +4,20 @@ from .models import UserInfo
 from django.contrib.auth import authenticate
 
 
-
-
 class UserInfoSerializer(serializers.ModelSerializer):
     class Meta:
         model = UserInfo
         fields = ("id", "phone", "on_subscribe", "own_channel", "user_id")
 
+
 # 접속 유지중인지 확인
 class UserSerializer(serializers.ModelSerializer):
-    userinfo=UserInfoSerializer(read_only=True)
+    userinfo = UserInfoSerializer(read_only=True)
+
     class Meta:
         model = User
-        fields = ("id", "username","userinfo")
+        fields = ("id", "username", "userinfo")
+
 
 # 회원가입
 class CreateUserSerializer(serializers.ModelSerializer):
@@ -42,5 +43,3 @@ class LoginUserSerializer(serializers.Serializer):
         if user and user.is_active:
             return user
         raise serializers.ValidationError("Unable to log in with provided credentials.")
-    
-

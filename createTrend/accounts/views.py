@@ -8,6 +8,7 @@ from rest_framework.decorators import api_view
 from knox.models import AuthToken
 from .serializers import CreateUserSerializer, UserSerializer, LoginUserSerializer, UserInfoSerializer
 
+
 # Create your views here.
 
 class RegistrationAPI(generics.GenericAPIView):
@@ -78,5 +79,3 @@ class UserInfoUpdateAPI(generics.UpdateAPIView):
             'data': []
         }
         return Response(response)
-
-

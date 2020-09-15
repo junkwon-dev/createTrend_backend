@@ -5,6 +5,7 @@ from django.contrib.auth.models import User
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 
+
 class Channel(models.Model):
     idx = models.AutoField(primary_key=True)
     channel_name = models.CharField(max_length=100, blank=True, null=True)
@@ -17,10 +18,10 @@ class Channel(models.Model):
     thumbnail_url = models.CharField(max_length=200, blank=True, null=True)
     temp = models.CharField(max_length=100, blank=True, null=True)
     status = models.BooleanField(blank=True, null=True)
+
     class Meta:
         managed = False
         db_table = 'channel'
-
 
 
 class UserInfo(models.Model):
@@ -30,13 +31,13 @@ class UserInfo(models.Model):
     own_channel = models.ForeignKey(Channel, models.DO_NOTHING, db_column='own_channel', blank=True, null=True)
 
     def set_phone(self, data):
-        self.phone=data
+        self.phone = data
 
-    def set_on_subscribe(self,data):
-        self.on_subscribe=data
+    def set_on_subscribe(self, data):
+        self.on_subscribe = data
 
-    def set_own_channel(self,data):
-        self.own_channel=data
+    def set_own_channel(self, data):
+        self.own_channel = data
 
 
 @receiver(post_save, sender=User)
