@@ -11,12 +11,6 @@ class UserInfoSerializer(serializers.ModelSerializer):
         model = UserInfo
         fields = ("id", "phone", "on_subscribe", "own_channel", "user_id")
 
-    def save(self,**kwargs):
-        phone = self.context['request'].phone
-        on_subscribe = self.context['request'].on_subscribe
-        own_channel = self.context['request'].own_channel
-
-
 # 접속 유지중인지 확인
 class UserSerializer(serializers.ModelSerializer):
     userinfo=UserInfoSerializer(read_only=True)
