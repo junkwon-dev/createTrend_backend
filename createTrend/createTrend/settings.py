@@ -145,6 +145,7 @@ USE_TZ = False
 STATIC_URL = '/staticfiles_django/'
 STATIC_ROOT = os.path.join(BASE_DIR, "static")
 # STATICFILES_DIRS = (os.path.join(BASE_DIR, 'static'),)
-CORS_ORIGIN_WHITELIST = [
-    'http://localhost:3000'
-]
+# CORS_ORIGIN_WHITELIST = [
+#     'http://localhost:3000'
+# ]
+CORS_ORIGIN_ALLOW_ALL = True
