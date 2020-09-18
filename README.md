@@ -64,3 +64,6 @@ Docker로 구성된 서버에 Dockerfile,Docker-compose로 모든것을 정리�
 ## 라이센스
 
  [the 3-clause BSD license 1](https://github.com/django/django/blob/master/the 3-clause BSD license 1)
+ 
+## 제작자
+권준
