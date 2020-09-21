@@ -112,6 +112,7 @@ class Channel(models.Model):
     thumbnail_url = models.CharField(max_length=200, blank=True, null=True)
     temp = models.CharField(max_length=100, blank=True, null=True)
     status = models.BooleanField(blank=True, null=True)
+    subscriber_num = models.IntegerField()
     class Meta:
         managed = False
         db_table = 'channel'

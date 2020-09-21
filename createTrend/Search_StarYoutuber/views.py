@@ -152,12 +152,21 @@ def channellist(request):
     ---
     전체 채널의 목록을 보여주는 API입니다.
     '''
-    paginator = PageNumberPagination()
-    paginator.page_size = 10
-    queryset = Channel.objects.all()
-    result_page = paginator.paginate_queryset(queryset, request)
-    serializer = ChannelListSerializer(result_page,many=True)
-    return paginator.get_paginated_response(serializer.data) 
+    youtuber_name = request.query_params.get('youtuber_name')
+    if youtuber_name is not None:
+        paginator = PageNumberPagination()
+        paginator.page_size = 10
+        queryset = Channel.objects.filter(channel_name__contains=youtuber_name).order_by('subscriber_num')
+        result_page = paginator.paginate_queryset(queryset, request)
+        serializer = ChannelListSerializer(result_page, many=True)
+        return paginator.get_paginated_response(serializer.data)
+    else:
+        paginator = PageNumberPagination()
+        paginator.page_size = 10
+        queryset = Channel.objects.all()
+        result_page = paginator.paginate_queryset(queryset, request)
+        serializer = ChannelListSerializer(result_page,many=True)
+        return paginator.get_paginated_response(serializer.data)
       
 
     

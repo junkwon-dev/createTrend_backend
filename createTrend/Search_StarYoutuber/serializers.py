@@ -12,7 +12,7 @@ class ChannelListSerializer(serializers.HyperlinkedModelSerializer):
     # channelsubscriber=SubscriberNumberSerializer(many=True, read_only = True)
     class Meta:
         model = Channel
-        fields = ['thumbnail_url', 'channel_description', 'channel_name', 'channel_start_date']
+        fields = ['thumbnail_url', 'channel_description', 'channel_name', 'channel_start_date', 'subscriber_num', 'status']
 
 class ChannelViewsCountSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
