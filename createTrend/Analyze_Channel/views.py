@@ -95,7 +95,7 @@ def keyword_data(request):
                 wordmapItems[itemIndex].update({'color': '#508ddc'})
         end_time = time.time() - start_time
         print(f'response time : {end_time}')
-        return Response({"type": "영상", "keyword": [{"name": keyword, "popular": avgImaging, "wordmap": {"name": keyword,
+        return Response({"type": "영상", "keyword": [{"name": keyword, "popular": avgImaging, "wordmap": {"name": keyword,'color': '#666',
                                                                                                         "children": wordmapItems},
                                                     "lines": {'type': "영상화 추이", 'data': imagingTransition},
                                                     "video": {"type": "analysis",
@@ -175,7 +175,7 @@ def keyword_data(request):
                 wordmapItems[itemIndex].update({'color': '#508ddc'})
         # return Response([popularDict,keywordCountSerializer.data])
         return Response({"type": "인기", "keyword": [{"name": keyword, "popular": avgPopularDict,
-                                                    "wordmap": {"name": keyword,
+                                                    "wordmap": {"name": keyword,'color': '#666',
                                                                 "children": wordmapItems},
                                                     "lines": {"type": "인기도 추이", "data": popularTransition},
                                                     "video": {"type": "analysis",
