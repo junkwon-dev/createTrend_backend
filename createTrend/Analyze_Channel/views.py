@@ -78,11 +78,25 @@ def keyword_data(request):
                            .order_by('-views')[:5]
         topViewVideoSerializer = VideoSerializer(topViewVideo, many=True)
         # return Response([imagingTransition,keywordCountSerializer.data])
-
+        wordmapItems = keywordCountSerializer.data
+        # 색깔추가
+        for itemIndex in range(len(wordmapItems)):
+            if itemIndex == 0:
+                wordmapItems[itemIndex].update({'color': '#f9bf69'})
+            elif itemIndex == 1:
+                wordmapItems[itemIndex].update({'color': '#f65a5a'})
+            elif itemIndex == 2:
+                wordmapItems[itemIndex].update({'color': '#508ddc'})
+            elif itemIndex == 3:
+                wordmapItems[itemIndex].update({'color': '#f9bf69'})
+            elif itemIndex == 4:
+                wordmapItems[itemIndex].update({'color': '#f65a5a'})
+            else:
+                wordmapItems[itemIndex].update({'color': '#508ddc'})
         end_time = time.time() - start_time
         print(f'response time : {end_time}')
         return Response({"type": "영상", "keyword": [{"name": keyword, "popular": avgImaging, "wordmap": {"name": keyword,
-                                                                                                        "children": keywordCountSerializer.data},
+                                                                                                        "children": wordmapItems},
                                                     "lines": {'type': "영상화 추이", 'data': imagingTransition},
                                                     "video": {"type": "analysis",
                                                               "data": topViewVideoSerializer.data}}]})
@@ -144,11 +158,25 @@ def keyword_data(request):
         keywordCountSerializer = KeywordCountSerializer(keywords, many=True)
         end_time = time.time() - start_time
         print(f'response time : {end_time}')
-
+        wordmapItems = keywordCountSerializer.data
+        # 색깔추가
+        for itemIndex in range(len(wordmapItems)):
+            if itemIndex == 0:
+                wordmapItems[itemIndex].update({'color': '#f9bf69'})
+            elif itemIndex == 1:
+                wordmapItems[itemIndex].update({'color': '#f65a5a'})
+            elif itemIndex == 2:
+                wordmapItems[itemIndex].update({'color': '#508ddc'})
+            elif itemIndex == 3:
+                wordmapItems[itemIndex].update({'color': '#f9bf69'})
+            elif itemIndex == 4:
+                wordmapItems[itemIndex].update({'color': '#f65a5a'})
+            else:
+                wordmapItems[itemIndex].update({'color': '#508ddc'})
         # return Response([popularDict,keywordCountSerializer.data])
         return Response({"type": "인기", "keyword": [{"name": keyword, "popular": avgPopularDict,
                                                     "wordmap": {"name": keyword,
-                                                                "children": keywordCountSerializer.data},
+                                                                "children": wordmapItems},
                                                     "lines": {"type": "인기도 추이", "data": popularTransition},
                                                     "video": {"type": "analysis",
                                                               "data": popularVideoSerializer.data}}]})
