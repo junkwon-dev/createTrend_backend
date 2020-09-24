@@ -117,7 +117,7 @@ def keyword_data(request):
         popularDictSum = 0
         for subdictKey in popularTransitionQuery:
             print(subdictKey['date'], subdictKey['value'])
-            popularTransition.append({"date": subdictKey['date'], "value": subdictKey['value']})
+            popularTransition.append({"date": subdictKey['date'], "value": round(subdictKey['value'],1)})
             try:
                 popularDictSum += subdictKey['value']
             except:

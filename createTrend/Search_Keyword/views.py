@@ -85,7 +85,7 @@ def keyword(request):
             end_time = time.time() - start_time
             print(f'response time : {end_time}')
             for subdict in popularTransitionQuery:
-                subscribers.append({"date": subdict['date'], "value": subdict['value'] * 100})
+                subscribers.append({"date": subdict['date'], "value": round(subdict['value'] * 100, 1)})
 
             popularTopKeyword = Video.objects \
                                     .filter(videokeywordnew__keyword=search, upload_time__range=(start, end)) \
