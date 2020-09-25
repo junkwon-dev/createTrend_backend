@@ -150,8 +150,8 @@ def keyword_data(request):
         keywords = [Keyword(keyword=keyword) for keyword in keywords]
 
         popularVideo = Video.objects.filter(
-            videokeywordnew__keyword__contains=keyword, upload_time__range=(start, end)
-        ).order_by(F('popularity').desc(nulls_last=True))[:5]
+            videokeywordnew__keyword=keyword, upload_time__range=(start, end)
+        ).order_by('-views')[:5]
         # .order_by(F('popularity').desc(nulls_last=True))[:5]
         popularVideoSerializer = VideoSerializer(popularVideo, many=True)
 
