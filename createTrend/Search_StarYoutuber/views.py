@@ -153,13 +153,38 @@ def channellist(request):
     전체 채널의 목록을 보여주는 API입니다.
     '''
     youtuber_name = request.query_params.get('youtuber_name')
+
     if youtuber_name is not None:
         paginator = PageNumberPagination()
         paginator.page_size = 10
-        queryset = Channel.objects.filter(channel_name__contains=youtuber_name).order_by('subscriber_num')
-        result_page = paginator.paginate_queryset(queryset, request)
+        channel_querysets = list(Channel.objects.prefetch_related('video','channelviews').filter(channel_name__contains=youtuber_name).order_by('subscriber_num'))
+        # youtuber_keyword_queryset = Channel.objects.filter(l)
+        result_page = paginator.paginate_queryset(channel_querysets, request)
         serializer = ChannelListSerializer(result_page, many=True)
-        return paginator.get_paginated_response(serializer.data)
+        result=serializer.data
+        additional_data = []
+        for channel_queryset in channel_querysets:
+            videos = channel_queryset.video.order_by('-upload_time')
+            video_counts = len(videos)
+            recent_videos = videos[:2]
+            recent_video_url =[]
+            for recent_video in recent_videos:
+                recent_video_url.append(recent_video.thumbnail_url)
+
+            max_views_count = list(channel_queryset.channelviews.order_by('-check_time')[:1])
+            try:
+                max_views_count= max_views_count[0].view_count
+            except:
+                max_views_count=0
+            try:
+                popularity = round(max_views_count / channel_queryset.subscriber_num, 1)
+            except:
+                popularity = 0
+            additional_data.append({'video_counts':video_counts,'recent_videos':recent_video_url,'max_views_count':max_views_count,'popularity':popularity})
+
+        for i in range(len(result)):
+            result[i].update(additional_data[i])
+        return paginator.get_paginated_response(result)
     else:
         paginator = PageNumberPagination()
         paginator.page_size = 10

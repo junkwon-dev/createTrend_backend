@@ -2,7 +2,14 @@ from rest_framework import serializers
 from .models import Channel, ChannelSubscriber, VideoViews, Video, VideoKeywordNew,ChannelViews
 
 # 사용자 목록
-        
+
+
+class AdditionalDataSerializer(serializers.Serializer):
+    video_counts = serializers.IntegerField()
+    recent_videos = serializers.CharField(max_length=1000)
+    max_views_count = serializers.IntegerField()
+    popularity = serializers.FloatField()
+
 class ChannelSubscriberSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = ChannelSubscriber
@@ -10,9 +17,10 @@ class ChannelSubscriberSerializer(serializers.HyperlinkedModelSerializer):
 
 class ChannelListSerializer(serializers.HyperlinkedModelSerializer):  
     # channelsubscriber=SubscriberNumberSerializer(many=True, read_only = True)
+    additional_data=AdditionalDataSerializer(read_only=True)
     class Meta:
         model = Channel
-        fields = ['thumbnail_url', 'channel_description', 'channel_name', 'channel_start_date', 'subscriber_num', 'status']
+        fields = ['idx','thumbnail_url', 'channel_description', 'channel_name', 'channel_start_date', 'subscriber_num', 'status', 'additional_data']
 
 class ChannelViewsCountSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
