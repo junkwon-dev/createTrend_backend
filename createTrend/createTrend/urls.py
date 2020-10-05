@@ -37,6 +37,7 @@ urlpatterns = [
     url(r'^redoc/$', schema_view.with_ui('redoc', cache_timeout=0), name='schema-redoc'),
     path('admin/', admin.site.urls),
     path('api/keyword_search/', include('Search_Keyword.urls')),
+    path('api/video_detail/', include('Video_Detail.urls')),
     path('api/youtuber_search/',include('Search_StarYoutuber.urls')),
     path('api/channel_analyze/',include('Analyze_Channel.urls')),
     path("api/accounts/", include("accounts.urls")),
