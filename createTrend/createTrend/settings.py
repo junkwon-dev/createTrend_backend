@@ -45,6 +45,7 @@ INSTALLED_APPS = [
     'drf_yasg',
     'knox',
     'accounts'
+    'Video_Detail'
 ]
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': ("knox.auth.TokenAuthentication",),
