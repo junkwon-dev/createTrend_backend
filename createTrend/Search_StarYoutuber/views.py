@@ -98,7 +98,7 @@ def channelinfo(request,pk):
             else:
                 wordmapItems[itemIndex].update({'color': '#508ddc'})
         return Response({'channelInfo':channelinfodict, 'video':{"type":"aside","data":topViewVideoSerializer.data}\
-            , 'wordmap': {'name': channel_name, 'color': '#666', 'children': wordmapItems},'line':{"type":"구독자수 추이","data":ChannelSubscriber}})
+            , 'keyword':{'pie':keywordCountSerializer.data},'wordmap': {'name': channel_name, 'color': '#666', 'children': wordmapItems},'line':{"type":"구독자수 추이","data":ChannelSubscriber}})
     
 param_channelperioddata_start_hint = openapi.Parameter(
         'start',
@@ -174,7 +174,7 @@ def channelperioddata(request,pk):
                     wordmapItems[itemIndex].update({'color': '#f65a5a'})
                 else:
                     wordmapItems[itemIndex].update({'color': '#508ddc'})
-            return Response({'video':{"type":"analysis","data":videoSerializer.data}, 'wordmap': {'name': channel_name, 'color': '#666', 'children': wordmapItems}})
+            return Response({'video':{"type":"analysis","data":videoSerializer.data},'keyword':{'pie':keywordCountSerializer.data}, 'wordmap': {'name': channel_name, 'color': '#666', 'children': wordmapItems}})
         else:
             start=timezone.now()-datetime.timedelta(days=14)
             start=start.strftime("%Y-%m-%d")
