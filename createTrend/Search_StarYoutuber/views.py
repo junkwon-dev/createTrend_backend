@@ -157,7 +157,7 @@ def channellist(request):
     if youtuber_name is not None:
         paginator = PageNumberPagination()
         paginator.page_size = 10
-        channel_querysets = list(Channel.objects.prefetch_related('video','channelviews').filter(channel_name__contains=youtuber_name).order_by('subscriber_num'))
+        channel_querysets = list(Channel.objects.prefetch_related('video','channelviews').filter(channel_name__icontains=youtuber_name).order_by('subscriber_num'))
         # youtuber_keyword_queryset = Channel.objects.filter(l)
         result_page = paginator.paginate_queryset(channel_querysets, request)
         serializer = ChannelListSerializer(result_page, many=True)
