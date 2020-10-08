@@ -43,17 +43,22 @@ def channelinfo(request,pk):
             
         topChannelSubscriber = channel.channelsubscriber\
             .order_by('-check_time')[:1]
-            
-        
+
+
         videos = channel.video.prefetch_related('videokeywordnew')
         keywords=[]
         
         for video in videos:
             keyword=[vk.keyword for vk in video.videokeywordnew.all()]
             keywords.append(keyword)
+
+
         keywords=list(itertools.chain(*keywords))
         counter=collections.Counter(keywords)
-        keywords=dict(counter.most_common(n=10))
+        keywords=dict(counter.most_common(n=7))
+        channel_name = channel.channel_name
+        while channel_name in keywords:
+            keywords.remove(channel_name)
         keywords=[{"name":key,"value":keywords[key]} for key in keywords.keys()]
         class Keyword(object):
             def __init__(self,keyword):
@@ -77,8 +82,22 @@ def channelinfo(request,pk):
         subscribernum=topChannelSubscriberSerializer.data[0]['subscriber_num']
         channelinfodict=channelSerializer.data
         channelinfodict['subscriber']=subscribernum
+        wordmapItems = keywordCountSerializer.data
+        for itemIndex in range(len(wordmapItems)):
+            if itemIndex == 0:
+                wordmapItems[itemIndex].update({'color': '#f9bf69'})
+            elif itemIndex == 1:
+                wordmapItems[itemIndex].update({'color': '#f65a5a'})
+            elif itemIndex == 2:
+                wordmapItems[itemIndex].update({'color': '#508ddc'})
+            elif itemIndex == 3:
+                wordmapItems[itemIndex].update({'color': '#f9bf69'})
+            elif itemIndex == 4:
+                wordmapItems[itemIndex].update({'color': '#f65a5a'})
+            else:
+                wordmapItems[itemIndex].update({'color': '#508ddc'})
         return Response({'channelInfo':channelinfodict, 'video':{"type":"aside","data":topViewVideoSerializer.data}\
-            ,'keyword':{'pie':keywordCountSerializer.data},'line':{"type":"구독자수 추이","data":ChannelSubscriber}})
+            , 'wordmap': {'name': channel_name, 'color': '#666', 'children': wordmapItems},'line':{"type":"구독자수 추이","data":ChannelSubscriber}})
     
 param_channelperioddata_start_hint = openapi.Parameter(
         'start',
@@ -119,13 +138,17 @@ def channelperioddata(request,pk):
             topViewVideos=[]
             for hv in hottest_videos:
                 topViewVideos.append(hv.video_idx)
+
             keywords=[]
             for video in videos:
                 keyword=[vk.keyword for vk in video.videokeywordnew.all()]
                 keywords.append(keyword)
             keywords=list(itertools.chain(*keywords))
             counter=collections.Counter(keywords)
-            keywords=dict(counter.most_common(n=10))
+            keywords=dict(counter.most_common(n=7))
+            channel_name=channel.channel_name
+            while channel_name in keywords:
+                keywords.remove(channel_name)
             keywords=[{"name":key,"value":keywords[key]} for key in keywords.keys()]
             class Keyword(object):
                 def __init__(self,keyword):
@@ -136,7 +159,21 @@ def channelperioddata(request,pk):
 
             keywordCountSerializer=KeywordCountSerializer(keywords,many=True)
             videoSerializer=VideoSerializer(topViewVideos,many=True)
-            return Response({'video':{"type":"analysis","data":videoSerializer.data}, 'keyword':{"pie":keywordCountSerializer.data}})
+            wordmapItems = keywordCountSerializer.data
+            for itemIndex in range(len(wordmapItems)):
+                if itemIndex == 0:
+                    wordmapItems[itemIndex].update({'color': '#f9bf69'})
+                elif itemIndex == 1:
+                    wordmapItems[itemIndex].update({'color': '#f65a5a'})
+                elif itemIndex == 2:
+                    wordmapItems[itemIndex].update({'color': '#508ddc'})
+                elif itemIndex == 3:
+                    wordmapItems[itemIndex].update({'color': '#f9bf69'})
+                elif itemIndex == 4:
+                    wordmapItems[itemIndex].update({'color': '#f65a5a'})
+                else:
+                    wordmapItems[itemIndex].update({'color': '#508ddc'})
+            return Response({'video':{"type":"analysis","data":videoSerializer.data}, 'wordmap': {'name': channel_name, 'color': '#666', 'children': wordmapItems}})
         else:
             start=timezone.now()-datetime.timedelta(days=14)
             start=start.strftime("%Y-%m-%d")
