@@ -8,7 +8,7 @@ import datetime, itertools, collections, time
 
 from django.db.models import Avg
 from rest_framework.decorators import api_view
-
+from .serializers import VideoViewsSerializer, VideoSerializer, ChannelSerializer
 ##전체평균인기도(일주일) 전체평균조회수(일주일) 해당동영상 조회수(일주일) 
 
 # Create your views here.
@@ -28,5 +28,9 @@ def videoDetail(request,pk):
         video_views=video.views 
         video_popularity=video.popularity
         video_week_views=video.videoviews.filter(check_time__range=(start,end))
-        return Response({'video_views':video_views,'video_popularity':video_popularity,'avg_popularity':avg_popularity,'avg_videoviews':avg_videoviews})
+        channel = video.channel_idx
+        serialized_video_week_views = VideoViewsSerializer(video_week_views,many=True)
+        serialized_video = VideoSerializer(video)
+        serialzied_channel = ChannelSerializer(channel)
+        return Response({'video_views':video_views,'video_popularity':video_popularity,'avg_popularity':avg_popularity,'avg_videoviews':avg_videoviews, 'video_week_views':serialized_video_week_views.data, 'video':serialized_video.data,'channel':serialzied_channel.data})
         
