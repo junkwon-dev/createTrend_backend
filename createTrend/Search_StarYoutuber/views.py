@@ -52,13 +52,14 @@ def channelinfo(request,pk):
             keyword=[vk.keyword for vk in video.videokeywordnew.all()]
             keywords.append(keyword)
 
-
-        keywords=list(itertools.chain(*keywords))
-        counter=collections.Counter(keywords)
-        keywords=dict(counter.most_common(n=7))
         channel_name = channel.channel_name
+        keywords=list(itertools.chain(*keywords))
         while channel_name in keywords:
             keywords.remove(channel_name)
+        counter=collections.Counter(keywords)
+        keywords=dict(counter.most_common(n=7))
+
+
         keywords=[{"name":key,"value":keywords[key]} for key in keywords.keys()]
         class Keyword(object):
             def __init__(self,keyword):
@@ -144,11 +145,11 @@ def channelperioddata(request,pk):
                 keyword=[vk.keyword for vk in video.videokeywordnew.all()]
                 keywords.append(keyword)
             keywords=list(itertools.chain(*keywords))
-            counter=collections.Counter(keywords)
-            keywords=dict(counter.most_common(n=7))
             channel_name=channel.channel_name
             while channel_name in keywords:
                 keywords.remove(channel_name)
+            counter=collections.Counter(keywords)
+            keywords=dict(counter.most_common(n=7))
             keywords=[{"name":key,"value":keywords[key]} for key in keywords.keys()]
             class Keyword(object):
                 def __init__(self,keyword):
