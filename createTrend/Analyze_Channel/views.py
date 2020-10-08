@@ -216,8 +216,9 @@ def analyze_channel(request):
     topPopularKeywords = dict(counter.most_common(n=10))
     topPopularKeywords = [{"name": key, "value": topPopularKeywords[key]} for key in topPopularKeywords.keys()]
     topPopularKeywords = [Keyword(keyword=keyword) for keyword in topPopularKeywords]
+    print(topPopularKeywords)
     # 영상화 키워드
-    start = timezone.now() - datetime.timedelta(days=7)
+    start = timezone.now() - datetime.timedelta(days=14)
     start = start.strftime("%Y-%m-%d")
     end = timezone.now().strftime("%Y-%m-%d")
     imagingTransitionKeyword = list(Video.objects.prefetch_related('videokeywordnew') \
