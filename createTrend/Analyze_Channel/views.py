@@ -203,8 +203,8 @@ def analyze_channel(request):
             self.value = keyword['value']
 
     popularTopKeyword = list(Video.objects.prefetch_related('videokeywordnew') \
-                             .filter(upload_time__range=(start, end)) \
-                             .order_by(F('popularity').desc(nulls_last=True))[:300])
+                             .exclude(channel_idx__in=[2409, 2438, 2544, 2388, 2465, 2412, 2386, 1063, 2417, 2488, 2476, 2357, 2425, 2416, 2454, 2461, 2399, 1069, 2394, 2422]).filter(upload_time__range=(start, end)) \
+                             .order_by(F('popularity').desc(nulls_last=True))[:500])
     topPopularKeywords = []
 
     for popularKeyword in popularTopKeyword:
@@ -222,8 +222,8 @@ def analyze_channel(request):
     start = start.strftime("%Y-%m-%d")
     end = timezone.now().strftime("%Y-%m-%d")
     imagingTransitionKeyword = list(Video.objects.prefetch_related('videokeywordnew') \
-                                    .filter(upload_time__range=(start, end)) \
-                                    .order_by(F('upload_time').desc(nulls_last=True))[:100])
+                                    .exclude(channel_idx__in=[2409, 2438, 2544, 2388, 2465, 2412, 2386, 1063, 2417, 2488, 2476, 2357, 2425, 2416, 2454, 2461, 2399, 1069, 2394, 2422]).filter(upload_time__range=(start, end)) \
+                                    .order_by(F('upload_time').desc(nulls_last=True))[:500])
     topImagingKeywords = []
     for imagingkeywordvideo in imagingTransitionKeyword:
         keyword = [keywords.keyword for keywords in imagingkeywordvideo.videokeywordnew.all()]
