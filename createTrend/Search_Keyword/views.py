@@ -1,6 +1,3 @@
-import django
-
-django.setup()
 from django.shortcuts import render
 from rest_framework import viewsets
 from rest_framework.decorators import api_view
@@ -15,12 +12,7 @@ from rest_framework.response import Response
 import datetime, itertools, collections, time
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
-from django import db
 from django.db.models.functions import Coalesce
-from threading import Thread
-from multiprocessing import Manager, Process
-
-
 
 # from Search_Keyword.serializers import topComment
 # Create your views here.
@@ -34,122 +26,6 @@ param_search_hint = openapi.Parameter(
     type=openapi.TYPE_STRING
 )
 
-
-class Keyword(object):
-    def __init__(self, keyword):
-        self.name = keyword['name']
-        self.value = keyword['value']
-
-def topVideoSerializer(search, start, end, return_dict, start_time):
-    end_time = time.time() - start_time
-    print(f'topVideoSerializer start time : {end_time}')
-
-    popularTopKeyword = Video.objects \
-                            .filter(videokeywordnew__keyword__icontains=search, upload_time__range=(start, end)) \
-                            .order_by('-popularity').distinct().prefetch_related('videokeywordnew')[:100]
-    topVideo = popularTopKeyword[:5]
-    topVideoSerializer = TopVideoSerializer(topVideo, many=True)
-
-    topPopularKeywords = []
-    for popularKeyword in popularTopKeyword.iterator():
-        # print(popularKeyword.videokeywordnew.all())
-        keyword = [popkeywords.keyword for popkeywords in popularKeyword.videokeywordnew.all()]
-        topPopularKeywords.append(keyword)
-    topPopularKeywords = list(itertools.chain(*topPopularKeywords))
-    counter = collections.Counter(topPopularKeywords)
-    topPopularKeywords = dict(counter.most_common(n=10))
-    topPopularKeywords = [{"name": key, "value": topPopularKeywords[key]} for key in topPopularKeywords.keys()]
-    topPopularKeywords = [Keyword(keyword=keyword) for keyword in topPopularKeywords]
-
-    topkeywordCountSerializer = KeywordCountSerializer(topPopularKeywords, many=True)
-
-    return_dict['topVideoSerializer_data'] = topVideoSerializer.data
-    return_dict['topkeywordCountSerializer_data'] = topkeywordCountSerializer.data
-
-    end_time = time.time() - start_time
-    print(f'topVideoSerializer response time : {end_time}')
-
-
-def recentVideoSerializer(search, start, end, return_dict, start_time):
-    end_time = time.time() - start_time
-    print(f'recentVideoSerializer start time : {end_time}')
-
-    recent_video = Video.objects.all() \
-                       .filter(videokeywordnew__keyword__icontains=search, upload_time__range=(start, end)) \
-                       .distinct().order_by('-upload_time')[:5]
-    recentVideoSerializer = RecentVideoSerializer(recent_video, many=True)
-    return_dict['recentVideoSerializer_data'] = recentVideoSerializer.data
-
-    end_time = time.time() - start_time
-    print(f'recentVideoSerializer response time : {end_time}')
-
-
-
-def wordmapItems(search, start, end, return_dict, start_time):
-    end_time = time.time() - start_time
-    print(f'wordmapItems start time : {end_time}')
-
-    keyword_video = Video.objects.prefetch_related('videokeywordnew') \
-                        .filter(videokeywordnew__keyword=search, upload_time__range=(start, end)) \
-                        .order_by('-upload_time')[:1000]
-    keywords = []
-    for video in keyword_video:
-        keyword = [videokeyword.keyword for videokeyword in video.videokeywordnew.all()]
-        keywords.append(keyword)
-
-    keywords = list(itertools.chain(*keywords))
-    while search in keywords:
-        keywords.remove(search)
-    counter = collections.Counter(keywords)
-    keywords = dict(counter.most_common(n=7))
-    keywords = [{"name": key, "value": keywords[key]} for key in keywords.keys()]
-    keywords = [Keyword(keyword=keyword) for keyword in keywords]
-    keywordCountSerializer = KeywordCountSerializer(keywords, many=True)
-
-    wordmapItems = keywordCountSerializer.data
-    # 색깔추가
-    for itemIndex in range(len(wordmapItems)):
-        if itemIndex == 0:
-            wordmapItems[itemIndex].update({'color': '#f9bf69'})
-        elif itemIndex == 1:
-            wordmapItems[itemIndex].update({'color': '#f65a5a'})
-        elif itemIndex == 2:
-            wordmapItems[itemIndex].update({'color': '#508ddc'})
-        elif itemIndex == 3:
-            wordmapItems[itemIndex].update({'color': '#f9bf69'})
-        elif itemIndex == 4:
-            wordmapItems[itemIndex].update({'color': '#f65a5a'})
-        else:
-            wordmapItems[itemIndex].update({'color': '#508ddc'})
-
-    return_dict['wordmapItems'] = wordmapItems
-
-    end_time = time.time() - start_time
-    print(f'wordmapItems response time : {end_time}')
-
-def topImagingKeywordCountSerializer(search, start, end, return_dict, start_time):
-    end_time = time.time() - start_time
-    print(f'topImagingKeywordCountSerializer start time : {end_time}')
-
-    imagingTransitionKeyword = list(Video.objects.prefetch_related('videokeywordnew') \
-                                    .filter(videokeywordnew__keyword=search, upload_time__range=(start, end)))
-
-    topImagingKeywords = []
-    for imagingkeywordvideo in imagingTransitionKeyword:
-        keyword = [imagingkeywords.keyword for imagingkeywords in imagingkeywordvideo.videokeywordnew.all()]
-        topImagingKeywords.append(keyword)
-    topImagingKeywords = list(itertools.chain(*topImagingKeywords))
-    counter = collections.Counter(topImagingKeywords)
-    topImagingKeywords = dict(counter.most_common(n=10))
-    topImagingKeywords = [{"name": key, "value": topImagingKeywords[key]} for key in topImagingKeywords.keys()]
-    topImagingKeywords = [Keyword(keyword=keyword) for keyword in topImagingKeywords]
-
-    topImagingKeywordCountSerializer = KeywordCountSerializer(topImagingKeywords, many=True)
-
-    return_dict['topImagingKeywordCountSerializer_data'] = topImagingKeywordCountSerializer.data
-
-    end_time = time.time() - start_time
-    print(f'topImagingKeywordCountSerializer response time : {end_time}')
 
 @swagger_auto_schema(method='get', manual_parameters=[param_search_hint])
 @api_view(['GET'])
@@ -166,56 +42,110 @@ def keyword(request):
             start = timezone.now() - datetime.timedelta(days=14)
             start = start.strftime("%Y-%m-%d")
             end = timezone.now().strftime("%Y-%m-%d")
+            recent_video = Video.objects.all() \
+                              .filter(videokeywordnew__keyword=search, upload_time__range=(start, end)) \
+                              .order_by('-upload_time')[:5]
+            keyword_video = Video.objects.prefetch_related('videokeywordnew') \
+                               .filter(videokeywordnew__keyword=search, upload_time__range=(start, end)) \
+                               .order_by('-upload_time')[:1000]
+            keywords = []
 
-            db.connections.close_all()
-
-            manager = Manager()
-            data_dict = manager.dict()
-
-            p1 = Process(target=topVideoSerializer, args=(search, start, end, data_dict, start_time))
-            p2 = Process(target=recentVideoSerializer, args=(search, start, end, data_dict, start_time))
-            p3 = Process(target=wordmapItems, args=(search, start, end, data_dict, start_time))
-            p4 = Process(target=topImagingKeywordCountSerializer, args=(search, start, end, data_dict, start_time))
-
-            p1.start()
-            p2.start()
-            p3.start()
-            p4.start()
-
-            imagingTransition = list(Video.objects.all() \
-                                     .filter(videokeywordnew__keyword__icontains=search, upload_time__range=(start, end)) \
-                                     .distinct().extra(select={'date': "TO_CHAR(upload_time, 'YYYY-MM-DD')"}).order_by('date').values('date') \
-                                     .annotate(value=Count('idx')))
-            popularTransitionQuery = list(Video.objects \
-                                          .filter(videokeywordnew__keyword__icontains=search, upload_time__range=(start, end),
-                                                  popularity__isnull=False).distinct() \
-                                          .extra(select={'date': "TO_CHAR(upload_time, 'YYYY-MM-DD')"}).order_by('-date').values('date') \
-                                          .annotate(value=Coalesce(Sum('popularity'), 0)))
-
-            subscribers = []
-
-            for subdict in popularTransitionQuery:
-                subscribers.append({"date": subdict['date'], "value": round(subdict['value'] * 100, 1)})
-
-
+            for video in keyword_video:
+                keyword = [videokeyword.keyword for videokeyword in video.videokeywordnew.all()]
+                keywords.append(keyword)
             end_time = time.time() - start_time
             print(f'response time : {end_time}')
 
-            p1.join()
-            p2.join()
-            p3.join()
-            p4.join()
+            keywords = list(itertools.chain(*keywords))
+            while search in keywords:
+                keywords.remove(search)
+            counter = collections.Counter(keywords)
+            keywords = dict(counter.most_common(n=7))
+            keywords = [{"name": key, "value": keywords[key]} for key in keywords.keys()]
+
+            class Keyword(object):
+                def __init__(self, keyword):
+                    self.name = keyword['name']
+                    self.value = keyword['value']
+
+            keywords = [Keyword(keyword=keyword) for keyword in keywords]
+            end_time = time.time() - start_time
+            print(f'response time : {end_time}')
+            imagingTransition = list(Video.objects.all() \
+                                     .filter(videokeywordnew__keyword=search, upload_time__range=(start, end)) \
+                                     .extra(select={'date': "TO_CHAR(upload_time, 'YYYY-MM-DD')"}).values('date') \
+                                     .annotate(value=Count('idx')))
+            popularTransitionQuery = list(Video.objects \
+                                          .filter(videokeywordnew__keyword=search, upload_time__range=(start, end),
+                                                  popularity__isnull=False) \
+                                          .extra(select={'date': "TO_CHAR(upload_time, 'YYYY-MM-DD')"}).values('date') \
+                                          .annotate(value=Coalesce(Sum('popularity'), 0)))
+
+            subscribers = []
+            end_time = time.time() - start_time
+            print(f'response time : {end_time}')
+            for subdict in popularTransitionQuery:
+                subscribers.append({"date": subdict['date'], "value": round(subdict['value'] * 100, 1)})
+
+            popularTopKeyword = Video.objects \
+                                    .filter(videokeywordnew__keyword=search, upload_time__range=(start, end)) \
+                                    .order_by('-popularity').prefetch_related('videokeywordnew')[:100]
+            topVideo = popularTopKeyword[:5]
+            topPopularKeywords = []
+            for popularKeyword in popularTopKeyword.iterator():
+                # print(popularKeyword.videokeywordnew.all())
+                keyword = [popkeywords.keyword for popkeywords in popularKeyword.videokeywordnew.all()]
+                topPopularKeywords.append(keyword)
+            end_time = time.time() - start_time
+            print(f'response time : {end_time}')
+            topPopularKeywords = list(itertools.chain(*topPopularKeywords))
+            counter = collections.Counter(topPopularKeywords)
+            topPopularKeywords = dict(counter.most_common(n=10))
+            topPopularKeywords = [{"name": key, "value": topPopularKeywords[key]} for key in topPopularKeywords.keys()]
+            topPopularKeywords = [Keyword(keyword=keyword) for keyword in topPopularKeywords]
+            imagingTransitionKeyword = list(Video.objects.prefetch_related('videokeywordnew') \
+                                            .filter(videokeywordnew__keyword=search, upload_time__range=(start, end)))
+
+            topImagingKeywords = []
+            for imagingkeywordvideo in imagingTransitionKeyword:
+                keyword = [imagingkeywords.keyword for imagingkeywords in imagingkeywordvideo.videokeywordnew.all()]
+                topImagingKeywords.append(keyword)
+            topImagingKeywords = list(itertools.chain(*topImagingKeywords))
+            counter = collections.Counter(topImagingKeywords)
+            topImagingKeywords = dict(counter.most_common(n=10))
+            topImagingKeywords = [{"name": key, "value": topImagingKeywords[key]} for key in topImagingKeywords.keys()]
+            topImagingKeywords = [Keyword(keyword=keyword) for keyword in topImagingKeywords]
+
+            topImagingKeywordCountSerializer = KeywordCountSerializer(topImagingKeywords, many=True)
+            topkeywordCountSerializer = KeywordCountSerializer(topPopularKeywords, many=True)
+            keywordCountSerializer = KeywordCountSerializer(keywords, many=True)
+            topVideoSerializer = TopVideoSerializer(topVideo, many=True)
+            recentVideoSerializer = RecentVideoSerializer(recent_video, many=True)
+            wordmapItems = keywordCountSerializer.data
+            # 색깔추가
+            for itemIndex in range(len(wordmapItems)):
+                if itemIndex == 0:
+                    wordmapItems[itemIndex].update({'color': '#f9bf69'})
+                elif itemIndex == 1:
+                    wordmapItems[itemIndex].update({'color': '#f65a5a'})
+                elif itemIndex == 2:
+                    wordmapItems[itemIndex].update({'color': '#508ddc'})
+                elif itemIndex == 3:
+                    wordmapItems[itemIndex].update({'color': '#f9bf69'})
+                elif itemIndex == 4:
+                    wordmapItems[itemIndex].update({'color': '#f65a5a'})
+                else:
+                    wordmapItems[itemIndex].update({'color': '#508ddc'})
 
             end_time = time.time() - start_time
-            print(f'result time : {end_time}')
-
-            return Response({'video': [{"type": "analysis", "data": data_dict['topVideoSerializer_data']},
-                                       {"type": "aside", "data": data_dict['recentVideoSerializer_data']}],
-                             'wordmap': {'name': search, 'color': '#666', 'children': data_dict['wordmapItems']},
+            print(f'response time : {end_time}')
+            return Response({'video': [{"type": "analysis", "data": topVideoSerializer.data},
+                                       {"type": "aside", "data": recentVideoSerializer.data}],
+                             'wordmap': {'name': search, 'color': '#666', 'children': wordmapItems},
                              "lines": [{"type": "영상화 추이", "data": imagingTransition},
                                        {"type": "인기도 추이", "data": subscribers}],
-                             "keyword": [{"type": "인기 키워드", "keyword": data_dict['topkeywordCountSerializer_data']},
-                                         {"type": "영상화 키워드", "keyword": data_dict['topImagingKeywordCountSerializer_data']}]})
+                             "keyword": [{"type": "인기 키워드", "keyword": topkeywordCountSerializer.data},
+                                         {"type": "영상화 키워드", "keyword": topImagingKeywordCountSerializer.data}]})
         else:
             paginator = PageNumberPagination()
             paginator.page_size = 10
