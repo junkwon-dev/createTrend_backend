@@ -43,7 +43,7 @@ def keyword_data(request):
         end = timezone.now().strftime("%Y-%m-%d")
 
         imagingTransition = list(Video.objects \
-                                 .filter(videokeywordnew__keyword__contains=keyword, upload_time__range=(start, end)) \
+                                 .filter(videokeywordnew__keyword=keyword, upload_time__range=(start, end)) \
                                  .extra(select={'date': "TO_CHAR(upload_time, 'YYYY-MM-DD')"}).values('date') \
                                  .annotate(value=Count('idx')))
         imagingVideoSum = 0
@@ -54,8 +54,8 @@ def keyword_data(request):
         except:
             avgImaging = 0
         keywordVideo = Video.objects \
-                           .filter(videokeywordnew__keyword__contains=keyword, upload_time__range=(start, end)) \
-                           .order_by('-upload_time')[:1000].prefetch_related('videokeywordnew')
+                           .filter(videokeywordnew__keyword=keyword, upload_time__range=(start, end)) \
+                           .order_by('-upload_time')[:500].prefetch_related('videokeywordnew')
         keywords = []
         for video in keywordVideo:
             videokeytmp = [videokeyword.keyword for videokeyword in video.videokeywordnew.all()]
@@ -227,7 +227,7 @@ def analyze_channel(request):
     #                                 .filter(upload_time__range=(start, end)) \
     #                                 .order_by(F('upload_time').desc(nulls_last=True))[:500])
     imagingTransitionKeyword = list(Video.objects.prefetch_related('videokeywordnew') \
-                                    .exclude(channel_idx__in=[2409, 2438, 2544, 2388, 2465, 2412, 2386, 1063, 2417, 2488, 2476, 2357, 2425, 2416, 2454, 2461, 2399, 1069, 2394, 2422, 484, 2291,2567, 2565, 2572, 2464, 2592, 2564,2570,2577,2508,2575,2568,2418,2527,2539,2436,2589,2571,2574,2169,2596,2293,739,2289,701,736,1877,2463,1561,605,2157,497,1318,493,566,568,766,707,535,756]) \
+                                    .exclude(channel_idx__in=[2409, 2438, 2544, 2388, 2465, 2412, 2386, 1063, 2417, 2488, 2476, 2357, 2425, 2416, 2454, 2461, 2399, 1069, 2394, 2422, 484, 2291,2567, 2565, 2572, 2464, 2592, 2564,2570,2577,2508,2575,2568,2418,2527,2539,2436,2589,2571,2574,2169,2596,2293,739,2289,701,736,1877,2463,1561,605,2157,497,1318,493,566,568,766,707,535,756,10307]) \
                                     .order_by(F('upload_time').desc(nulls_last=True))[:300])
     topImagingKeywords = []
     for imagingkeywordvideo in imagingTransitionKeyword:
