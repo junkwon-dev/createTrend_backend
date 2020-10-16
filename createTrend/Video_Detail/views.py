@@ -30,5 +30,6 @@ def videoDetail(request,pk):
         channel = video.channel_idx
         serialized_video = VideoSerializer(video)
         serialzied_channel = ChannelSerializer(channel)
-        return Response({'video_views':video_views,'video_popularity':video_popularity,'avg_popularity':avg_popularity,'avg_videoviews':avg_videoviews, 'video':serialized_video.data,'channel':serialzied_channel.data})
+        return Response({"type":"영상","video":{'video_views':video_views,'video_popularity':video_popularity,'avg_popularity':avg_popularity['popularity__avg'],'avg_videoviews':avg_videoviews['views__avg'], 'video':serialized_video.data}
+                         ,'channel':serialzied_channel.data})
         
