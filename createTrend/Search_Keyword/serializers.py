@@ -22,14 +22,14 @@ class TopVideoSerializer(serializers.HyperlinkedModelSerializer):
     videokeywordnew=VideoKeywordSerializer(many=True,read_only=True)
     class Meta:
         model = Video
-        fields = ['video_name','video_id','thumbnail_url','videokeywordnew']
+        fields = ['video_name','video_id','thumbnail_url','videokeywordnew','popularity','views']
 
 class RecentVideoSerializer(serializers.HyperlinkedModelSerializer):
     # videoviews=VideoViewsSerializer(many=True,read_only=True)
     # videokeywordnew=VideoKeywordSerializer(many=True,read_only=True)
     class Meta:
         model = Video
-        fields = ['video_name','video_id','thumbnail_url']
+        fields = ['video_name','video_id','thumbnail_url','popularity','views']
         
 class KeywordCountSerializer(serializers.Serializer):
     name = serializers.CharField(max_length=200)
