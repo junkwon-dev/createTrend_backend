@@ -27,10 +27,8 @@ def videoDetail(request,pk):
         avg_videoviews=Video.objects.filter(upload_time__range=(start, end)).aggregate(Avg('views'))
         video_views=video.views 
         video_popularity=video.popularity
-        video_week_views=video.videoviews.filter(check_time__range=(start,end))
         channel = video.channel_idx
-        serialized_video_week_views = VideoViewsSerializer(video_week_views,many=True)
         serialized_video = VideoSerializer(video)
         serialzied_channel = ChannelSerializer(channel)
-        return Response({'video_views':video_views,'video_popularity':video_popularity,'avg_popularity':avg_popularity,'avg_videoviews':avg_videoviews, 'video_week_views':serialized_video_week_views.data, 'video':serialized_video.data,'channel':serialzied_channel.data})
+        return Response({'video_views':video_views,'video_popularity':video_popularity,'avg_popularity':avg_popularity,'avg_videoviews':avg_videoviews, 'video':serialized_video.data,'channel':serialzied_channel.data})
         

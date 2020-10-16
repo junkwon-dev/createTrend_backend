@@ -44,3 +44,24 @@ class VideoViews(models.Model):
     class Meta:
         managed = False
         db_table = 'video_views'
+
+class VideoLikes(models.Model):
+    video_idx = models.ForeignKey(Video, models.DO_NOTHING, db_column='video_idx', related_name='videolikes')
+    likes = models.IntegerField()
+    check_time = models.DateTimeField()
+    dislikes = models.IntegerField(blank=True, null=True)
+    idx = models.AutoField(primary_key=True)
+
+    class Meta:
+        managed = False
+        db_table = 'video_likes'
+        
+class VideoKeywordNew(models.Model):
+    video_idx = models.ForeignKey(Video, models.DO_NOTHING, db_column='video_idx', related_name='videokeywordnew')
+    keyword = models.CharField(max_length=100)
+    idx = models.AutoField(primary_key=True)
+
+    class Meta:
+        managed = False
+        db_table = 'video_keyword_new'
+        unique_together = (('video_idx', 'keyword'),)
