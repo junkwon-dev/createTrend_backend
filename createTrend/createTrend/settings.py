@@ -46,6 +46,7 @@ INSTALLED_APPS = [
     'knox',
     'accounts',
     'Video_Detail',
+    'Views_Predict',
 ]
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': ("knox.auth.TokenAuthentication",),

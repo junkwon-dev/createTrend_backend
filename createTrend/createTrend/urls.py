@@ -42,4 +42,5 @@ urlpatterns = [
     path('api/channel_analyze/',include('Analyze_Channel.urls')),
     path("api/accounts/", include("accounts.urls")),
     path("api/accounts/auth", include("knox.urls")),
+    path("api/views_predict/", include('Views_Predict.urls')),
 ]
