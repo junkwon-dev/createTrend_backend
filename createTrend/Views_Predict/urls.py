@@ -3,5 +3,5 @@ from Views_Predict import views
 
 
 urlpatterns = [
-    path('/',views.videoViewsPredict)
+    path('',views.videoViewsPredict)
 ]

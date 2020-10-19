@@ -87,9 +87,10 @@ def recentVideoSerializer(search, start, end, return_dict, start_time):
         .filter(
             videokeywordnew__keyword__regex=rf"(^| +){search}($| +)",
             upload_time__range=(start, end),
+            views_growth__isnull=False
         )
         .distinct()
-        .order_by("-upload_time")[:5]
+        .order_by("-views_growth")[:5]
     )
     recentVideoSerializer = RecentVideoSerializer(recent_video, many=True)
     for video in recentVideoSerializer.data:

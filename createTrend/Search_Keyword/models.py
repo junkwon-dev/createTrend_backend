@@ -41,6 +41,7 @@ class Video(models.Model):
     forbidden = models.BooleanField(blank=True, null=True)
     popularity = models.FloatField()
     views=models.IntegerField()
+    views_growth=models.IntegerField()
     class Meta:
         managed = False
         db_table = 'video'
