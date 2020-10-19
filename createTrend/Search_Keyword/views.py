@@ -92,6 +92,8 @@ def recentVideoSerializer(search, start, end, return_dict, start_time):
         .order_by("-upload_time")[:5]
     )
     recentVideoSerializer = RecentVideoSerializer(recent_video, many=True)
+    for video in recentVideoSerializer.data:
+        video['popularity']=video['popularity']*100
     return_dict["recentVideoSerializer_data"] = recentVideoSerializer.data
     print(return_dict["recentVideoSerializer_data"])
 
@@ -230,7 +232,8 @@ def keyword(request):
 
             topVideo = popularTopKeyword[:5]
             topVideoSerializer = TopVideoSerializer(topVideo, many=True)
-
+            for video in topVideoSerializer.data:
+                video['popularity']=video['popularity']*100
             topPopularKeywords = []
             for popularKeyword in popularTopKeyword.iterator():
                 # print(popularKeyword.videokeywordnew.all())
@@ -262,8 +265,8 @@ def keyword(request):
             return Response(
                 {
                     "video": [
-                        {"type": "analysis", "data": topVideoSerializer.data},
-                        {"type": "aside", "data": data_dict["recentVideoSerializer_data"],},
+                        {"type": "analysis", "data": data_dict["recentVideoSerializer_data"],},
+                        {"type": "aside", "data": topVideoSerializer.data},
                     ],  # 최신
                     "wordmap": {
                         "name": search,
