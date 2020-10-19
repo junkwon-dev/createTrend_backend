@@ -109,7 +109,7 @@ def wordmapItems(search, start, end, return_dict, start_time):
             videokeywordnew__keyword__regex=rf"(^| +){search}($| +)",
             upload_time__range=(start, end),
         )
-        .order_by("-upload_time")[:1000]
+        .order_by("-upload_time")[:100]
     )
     keywords = []
     for video in keyword_video:

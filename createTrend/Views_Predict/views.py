@@ -1,8 +1,8 @@
 from django.shortcuts import render
 from rest_framework.response import Response
-
+from rest_framework.decorators import api_view
 @api_view(['GET'])
-def videoPredict(request,pk):
+def videoViewsPredict(request,pk):
     if request.method == 'GET':
         thumbnail_url = request.query_params.get("thumbnail_url")
         video_name = request.query_params.get("video_name")
