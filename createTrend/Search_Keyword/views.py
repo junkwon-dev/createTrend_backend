@@ -42,7 +42,7 @@ def plus(search, start, end, return_dict, start_time):
     print(f"topVideoSerializer start time : {end_time}")
 
     imagingTransition = list(
-        Video.objects.all()
+        Video.objects
         .filter(
             videokeywordnew__keyword__regex=rf"(^| +){search}($| +)",
             upload_time__range=(start, end),
@@ -83,7 +83,7 @@ def recentVideoSerializer(search, start, end, return_dict, start_time):
     print(f"recentVideoSerializer start time : {end_time}")
 
     recent_video = (
-        Video.objects.all()
+        Video.objects
         .filter(
             videokeywordnew__keyword__regex=rf"(^| +){search}($| +)",
             upload_time__range=(start, end),
@@ -203,8 +203,6 @@ def keyword(request):
             manager = Manager()
             data_dict = manager.dict()
 
-            videos = Video.objects.all()
-
             p1 = Process(target=plus, args=(search, start, end, data_dict, start_time))
             p2 = Process(
                 target=recentVideoSerializer, args=(search, start, end, data_dict, start_time),
@@ -221,9 +219,9 @@ def keyword(request):
             p4.start()
 
             popularTopKeyword = (
-                videos.filter(
+                Video.objects.filter(
                     videokeywordnew__keyword__regex=rf"(^| +){search}($| +)",
-                    upload_time__range=(start, end),
+                    upload_time__range=(start, end)
                 )
                 .order_by("-popularity")
                 .distinct()
