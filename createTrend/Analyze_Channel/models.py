@@ -33,6 +33,7 @@ class Video(models.Model):
     popularity = models.FloatField(blank=True,null=True)
     views = models.IntegerField()
     views_growth = models.IntegerField()
+    crawled=models.BooleanField()
     class Meta:
         managed = False
         db_table = 'video'
