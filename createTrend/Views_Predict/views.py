@@ -8,14 +8,13 @@ from rest_framework.decorators import api_view
 
 
 
-@api_view(['POST'])
+@api_view(['GET'])
 def videoViewsPredict(request):
-    if request.method == 'POST':    
-
-        thumbnail_url = request.data["thumbnail_url"]
-        video_name = request.data["video_name"]
-        channel_subscriber = request.data["channel_subscriber"]
-        upload_date = request.data["upload_date"]
+    if request.method == 'GET':    
+        thumbnail_url = request.query_params.get("thumbnail_url")
+        video_name = request.query_params.get("video_name")
+        channel_subscriber = request.query_params.get("channel_subscriber")
+        upload_date = request.query_params.get("upload_date")   
         print(thumbnail_url, video_name,channel_subscriber,upload_date)
         if thumbnail_url and video_name and channel_subscriber and upload_date:
             
