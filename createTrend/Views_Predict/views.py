@@ -8,13 +8,14 @@ from rest_framework.decorators import api_view
 
 
 
-@api_view(['GET'])
+@api_view(['POST'])
 def videoViewsPredict(request):
-    if request.method == 'GET':    
-        thumbnail_url = request.query_params.get("thumbnail_url")
-        video_name = request.query_params.get("video_name")
-        channel_subscriber = request.query_params.get("channel_subscriber")
-        upload_date = request.query_params.get("upload_date")   
+    if request.method == 'POST':    
+
+        thumbnail_url = request.data["thumbnail_url"]
+        video_name = request.data["video_name"]
+        channel_subscriber = request.data["channel_subscriber"]
+        upload_date = request.data["upload_date"]
         print(thumbnail_url, video_name,channel_subscriber,upload_date)
         if thumbnail_url and video_name and channel_subscriber and upload_date:
             
@@ -62,7 +63,7 @@ def videoViewsPredict(request):
                     channel.queue_delete(queue=queue_name + "_r")
                     connection.close()
                     break
-            returnDict = {'1일후':views[0],'1주후':views[1],'1주후':views[1],'2주후':views[2],'3주후':views[3],'4주후':views[4],'5주후':views[5],'3년후':views[6]}
+            returnDict = {'1day':views[0],'1week':views[1],'2weeks':views[2],'3weeks':views[3],'4weeks':views[4],'5weeks':views[5],'3years':views[6]}
             return Response(returnDict)
         else:
             return Response()
