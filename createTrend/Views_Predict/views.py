@@ -62,7 +62,7 @@ def videoViewsPredict(request):
                     channel.queue_delete(queue=queue_name + "_r")
                     connection.close()
                     break
-            returnDict = {'1day':views[0],'1week':views[1],'2weeks':views[2],'3weeks':views[3],'4weeks':views[4],'5weeks':views[5],'3yearsq':views[6]}
+            returnDict = {'oneDay':views[0],'oneWeek':views[1],'twoWeeks':views[2],'threeWeeks':views[3],'fourWeekrs':views[4],'fiveWeeks':views[5],'threeYears':views[6]}
             return Response(returnDict)
         else:
             return Response()
