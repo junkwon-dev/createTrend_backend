@@ -42,7 +42,7 @@ class VideoSerializer(serializers.HyperlinkedModelSerializer):
     videokeywordnew=VideoKeywordNewSerializer(many=True,read_only=True)
     class Meta:
         model = Video
-        fields = ['video_name','video_description','video_id','upload_time','processed','thumbnail_url','thumbnail_processed','videoviews','videokeywordnew']
+        fields = ['idx','video_name','video_description','video_id','upload_time','processed','thumbnail_url','thumbnail_processed','videoviews','videokeywordnew']
 
 class ChannelInfoSerializer(serializers.HyperlinkedModelSerializer):
     videoviews=VideoViewsSerializer(many=True,read_only=True)
