@@ -26,10 +26,14 @@ def videoDetail(request,pk):
         avg_popularity=Video.objects.filter(upload_time__range=(start, end)).aggregate(Avg('popularity'))
         avg_videoviews=Video.objects.filter(upload_time__range=(start, end)).aggregate(Avg('views'))
         video_views=video.views 
+        video_views_transition=[]
+        video_views_querysets=list(video.videoviews.all())
+        for video_views_queryset in video_views_querysets:
+            video_views_transition.append({"date":str(video_views_queryset.check_time)[:10],"value":video_views_queryset.views})
         video_popularity=video.popularity
         channel = video.channel_idx
         serialized_video = VideoSerializer(video)
         serialzied_channel = ChannelSerializer(channel)
         return Response({"type":"영상","video":{'video_views':video_views,'video_popularity':video_popularity,'avg_popularity':avg_popularity['popularity__avg'],'avg_videoviews':avg_videoviews['views__avg'], 'video':serialized_video.data}
-                         ,'channel':serialzied_channel.data})
+                         ,'lines':{'type':"조회수 추이","data":video_views_transition},'channel':serialzied_channel.data})
         

@@ -18,12 +18,11 @@ class VideoLikesSerializer(serializers.HyperlinkedModelSerializer):
         fields = ['likes','dislikes']
         
 class VideoSerializer(serializers.HyperlinkedModelSerializer):
-    videoviews=VideoViewsSerializer(many=True,read_only=True)
     videolikes=VideoLikesSerializer(many=True,read_only=True)
     videokeywordnew=VideoKeywordNewSerializer(many=True,read_only=True)
     class Meta:
         model = Video
-        fields = ['video_name','video_id','thumbnail_url','video_description','videoviews','videolikes','videokeywordnew']
+        fields = ['video_name','video_id','thumbnail_url','video_description','videolikes','videokeywordnew']
         
 class ChannelSerializer(serializers.HyperlinkedModelSerializer):  
     # channelsubscriber=SubscriberNumberSerializer(many=True, read_only = True)
