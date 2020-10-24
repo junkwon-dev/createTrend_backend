@@ -47,6 +47,7 @@ INSTALLED_APPS = [
     'accounts',
     'Video_Detail',
     'Views_Predict',
+    'test_elasticsearch',
 ]
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': ("knox.auth.TokenAuthentication",),
@@ -129,7 +130,7 @@ SWAGGER_SETTINGS = {
 
 ELASTICSEARCH_DSL = {
     'default': {
-        'hosts': 'elasticsearch:9200'
+        'hosts': 'localhost:9200'
     },
 }
 
