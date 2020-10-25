@@ -48,6 +48,7 @@ INSTALLED_APPS = [
     'Video_Detail',
     'Views_Predict',
     'test_elasticsearch',
+    'django_elasticsearch_dsl',
 ]
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': ("knox.auth.TokenAuthentication",),

@@ -1,5 +1,4 @@
 from django.db import models
-from test_elasticsearch.search import keywordIndex
 # Create your models here.
 class Channel(models.Model):
     idx = models.AutoField(primary_key=True)
@@ -40,19 +39,10 @@ class Video(models.Model):
         db_table = 'video'
 
 class VideoKeywordNew(models.Model):
-    video_idx = models.ForeignKey(Video, models.DO_NOTHING, db_column='video_idx', related_name='videokeywordnew')
+    video_idx = models.ForeignKey(Video, models.DO_NOTHING, db_column='video_idx', related_name='videokeywordnews')
     keyword = models.CharField(max_length=100)
     idx = models.AutoField(primary_key=True)
 
-    def indexing(self):
-        obj = keywordIndex(
-            meta={'id':self.idx},
-            keyword=self.keyword,
-            video_idx=self.video_idx
-        )
-        obj.save()
-        return obj.to_dict(include_meta=True)
-    
     class Meta:
         managed = False
         db_table = 'video_keyword_new'
