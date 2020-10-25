@@ -131,7 +131,7 @@ SWAGGER_SETTINGS = {
 
 ELASTICSEARCH_DSL = {
     'default': {
-        'hosts': '172.31.7.144:9200'
+        'hosts': '13.124.107.195:9200'
     },
 }
 
