@@ -131,7 +131,7 @@ SWAGGER_SETTINGS = {
 
 ELASTICSEARCH_DSL = {
     'default': {
-        'hosts': 'elasticsearch-7.9.3:9200'
+        'hosts': 'localhost:9200'
     },
 }
 
