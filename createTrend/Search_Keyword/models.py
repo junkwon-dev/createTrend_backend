@@ -42,12 +42,13 @@ class Video(models.Model):
     popularity = models.FloatField()
     views=models.IntegerField()
     views_growth=models.IntegerField()
+    crawled=models.BooleanField()
     class Meta:
         managed = False
         db_table = 'video'
                
 class VideoKeywordNew(models.Model):
-    video_idx = models.ForeignKey(Video, models.DO_NOTHING, db_column='video_idx', related_name='videokeywordnew')
+    video_idx = models.ForeignKey(Video, models.DO_NOTHING, db_column='video_idx', related_name='videokeywordnews')
     keyword = models.CharField(max_length=100)
     idx = models.AutoField(primary_key=True)
 

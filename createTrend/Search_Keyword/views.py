@@ -20,6 +20,8 @@ from drf_yasg.utils import swagger_auto_schema
 from django import db
 from django.db.models.functions import Coalesce
 from multiprocessing import Manager, Process
+from .documents import VideoDocument
+from elasticsearch_dsl import Q
 
 # from Search_Keyword.serializers import topComment
 # Create your views here.
@@ -41,18 +43,30 @@ def plus(search, start, end, return_dict, start_time):
     end_time = time.time() - start_time
     print(f"topVideoSerializer start time : {end_time}")
 
-    imagingTransition = list(
-        Video.objects
-        .filter(
-            videokeywordnew__keyword__regex=rf"(^| +){search}($| +)",
-            upload_time__range=(start, end),
-        )
-        .distinct()
-        .extra(select={"date": "TO_CHAR(upload_time, 'YYYY-MM-DD')"})
-        .order_by("date")
-        .values("date")
-        .annotate(value=Count("idx"))
+    # imagingTransition = dict(
+    #     Video.objects
+    #     .filter(
+    #         videokeywordnew__keyword__regex=rf"(^| +){search}($| +)",
+    #         upload_time__range=(start, end),
+    #     )
+    #     .distinct()
+    #     .extra(select={"date": "TO_CHAR(upload_time, 'YYYY-MM-DD')"})
+    #     .order_by("date")
+    #     .values("date")
+    #     .annotate(value=Count("idx"))
+    # )
+    imagingTransition=(
+        VideoDocument
+        .search()
+        .filter('nested',path='videokeywordnews',query=Q('term', videokeywordnews__keyword=search))
+        .filter('range',upload_time={'gte':'now-14d/d','lt':"now"})
     )
+    imagingTransition.aggs.bucket('mola',A('date_histogram',field='upload_time',calendar_interval='1d'))
+    imagingTransition=imagingTransition.response()
+    imagingTransitionList=[]
+    for tag in imagingTransition.aggregations.mola.buckets:
+        imagingTransitionList.append({'date':tag.key_as_string[:10],'count':tag.doc_count})
+        
     popularTransitionQuery = list(
         Video.objects.filter(
             videokeywordnew__keyword__regex=rf"(^| +){search}($| +)",
@@ -65,33 +79,53 @@ def plus(search, start, end, return_dict, start_time):
         .values("date")
         .annotate(value=Coalesce(Sum("popularity"), 0))
     )
+    popularTransitionQuery=(
+        VideoDocument
+        .search()
+        .filter('nested',path='videokeywordnews',query=Q('term', videokeywordnews__keyword=search))
+        .filter('range',upload_time={'gte':'now-14d/d','lt':"now"})
+    )
+    popularTransitionQuery.aggs.bucket('mola',A('avg',field='upload_time',calendar_interval='1d'))
+    imagingTransition=imagingTransition.response()
+    imagingTransitionList=[]
+    for tag in imagingTransition.aggregations.mola.buckets:
+        imagingTransitionList.append({'date':tag.key_as_string[:10],'count':tag.doc_count})
 
     subscribers = []
 
     for subdict in popularTransitionQuery:
         subscribers.append({"date": subdict["date"], "value": round(subdict["value"] * 100, 1)})
 
-    return_dict["imagingTransition"] = imagingTransition
+    return_dict["imagingTransition"] = imagingTransitionList
     return_dict["subscribers"] = subscribers
 
     end_time = time.time() - start_time
     print(f"plus response time : {end_time}")
+    print(imagingTransitionList)
 
 
 def recentVideoSerializer(search, start, end, return_dict, start_time):
     end_time = time.time() - start_time
     print(f"recentVideoSerializer start time : {end_time}")
 
-    recent_video = (
-        Video.objects
-        .filter(
-            videokeywordnew__keyword__regex=rf"(^| +){search}($| +)",
-            upload_time__range=(start, end),
-            views_growth__isnull=False
-        )
-        .distinct()
-        .order_by("-views_growth")[:5]
+    # recent_video = (
+    #     Video.objects
+    #     .filter(
+    #         videokeywordnew__keyword__regex=rf"(^| +){search}($| +)",
+    #         upload_time__range=(start, end),
+    #         views_growth__isnull=False
+    #     )
+    #     .distinct()
+    #     .order_by("-views_growth")[:5]
+    # )
+    recent_video=(
+        VideoDocument
+        .search()
+        .filter('nested',path='videokeywordnews',query=Q('term', videokeywordnews__keyword=search))
+        .filter('range',upload_time={'gte':'now-14d/d','lt':"now"})
+        .sort({"views_growth":"desc"})[:5]
     )
+    
     recentVideoSerializer = RecentVideoSerializer(recent_video, many=True)
     for video in recentVideoSerializer.data:
         video['popularity']=video['popularity']*100
@@ -106,17 +140,24 @@ def wordmapItems(search, start, end, return_dict, start_time):
     end_time = time.time() - start_time
     print(f"wordmapItems start time : {end_time}")
 
-    keyword_video = (
-        Video.objects.prefetch_related("videokeywordnew")
-        .filter(
-            videokeywordnew__keyword__regex=rf"(^| +){search}($| +)",
-            upload_time__range=(start, end),
-        )
-        .order_by("-upload_time")[:100]
+    # keyword_video = (
+    #     Video.objects.prefetch_related("videokeywordnew")
+    #     .filter(
+    #         videokeywordnew__keyword__regex=rf"(^| +){search}($| +)",
+    #         upload_time__range=(start, end),
+    #     )
+    #     .order_by("-upload_time")[:100]
+    # )
+    keyword_video=(
+        VideoDocument
+        .search()
+        .filter('nested',path='videokeywordnews',query=Q('term', videokeywordnews__keyword=search))
+        .filter('range',upload_time={'gte':'now-14d/d','lt':"now"})
+        .sort({"upload_time":"desc"})[:100]
     )
     keywords = []
     for video in keyword_video:
-        keyword = [videokeyword.keyword for videokeyword in video.videokeywordnew.all()]
+        keyword = [videokeyword.keyword for videokeyword in video.videokeywordnews]
         keywords.append(keyword)
 
     keywords = list(itertools.chain(*keywords))
@@ -154,17 +195,23 @@ def topImagingKeywordCountSerializer(search, start, end, return_dict, start_time
     end_time = time.time() - start_time
     print(f"topImagingKeywordCountSerializer start time : {end_time}")
 
-    imagingTransitionKeyword = list(
-        Video.objects.prefetch_related("videokeywordnew").filter(
-            videokeywordnew__keyword__regex=rf"(^| +){search}($| +)",
-            upload_time__range=(start, end),
-        )
-    )
+    # imagingTransitionKeyword = list(
+    #     Video.objects.prefetch_related("videokeywordnew").filter(
+    #         videokeywordnew__keyword__regex=rf"(^| +){search}($| +)",
+    #         upload_time__range=(start, end),
+    #     )
+    # )
 
+    imagingTransitionKeyword=(
+        VideoDocument
+        .search()
+        .filter('nested',path='videokeywordnews',query=Q('term', videokeywordnews__keyword=search))
+        .filter('range',upload_time={'gte':'now-14d/d','lt':"now"})
+    )
     topImagingKeywords = []
     for imagingkeywordvideo in imagingTransitionKeyword:
         keyword = [
-            imagingkeywords.keyword for imagingkeywords in imagingkeywordvideo.videokeywordnew.all()
+            imagingkeywords.keyword for imagingkeywords in imagingkeywordvideo.videokeywordnews
         ]
         topImagingKeywords.append(keyword)
     topImagingKeywords = list(itertools.chain(*topImagingKeywords))
@@ -219,25 +266,32 @@ def keyword(request):
             p3.start()
             p4.start()
 
-            popularTopKeyword = (
-                Video.objects.filter(
-                    videokeywordnew__keyword__regex=rf"(^| +){search}($| +)",
-                    upload_time__range=(start, end)
-                )
-                .order_by("-popularity")
-                .distinct()
-                .prefetch_related("videokeywordnew")[:100]
-            )
+            # popularTopKeyword = (
+            #     Video.objects.filter(
+            #         videokeywordnew__keyword__regex=rf"(^| +){search}($| +)",
+            #         upload_time__range=(start, end)
+            #     )
+            #     .order_by("-popularity")
+            #     .distinct()
+            #     .prefetch_related("videokeywordnew")[:100]
+            # )
 
+            popularTopKeyword=(
+                VideoDocument
+                .search()
+                .filter('nested',path='videokeywordnews',query=Q('term', videokeywordnews__keyword=search))
+                .filter('range',upload_time={'gte':'now-14d/d','lt':"now"})
+                .sort({"popularity":"desc"})[:100]
+            )
             topVideo = popularTopKeyword[:5]
             topVideoSerializer = TopVideoSerializer(topVideo, many=True)
             for video in topVideoSerializer.data:
                 video['popularity']=video['popularity']*100
             topPopularKeywords = []
-            for popularKeyword in popularTopKeyword.iterator():
+            for popularKeyword in popularTopKeyword:
                 # print(popularKeyword.videokeywordnew.all())
                 keyword = [
-                    popkeywords.keyword for popkeywords in popularKeyword.videokeywordnew.all()
+                    popkeywords.keyword for popkeywords in popularKeyword.videokeywordnews
                 ]
                 topPopularKeywords.append(keyword)
             topPopularKeywords = list(itertools.chain(*topPopularKeywords))
@@ -274,7 +328,7 @@ def keyword(request):
                     },
                     "lines": [
                         {"type": "영상화 추이", "data": data_dict["imagingTransition"]},
-                        {"type": "인기도 추이", "data": data_dict["subscribers"]},
+                        # {"type": "인기도 추이", "data": data_dict["subscribers"]},
                     ],
                     "keyword": [
                         {"type": "인기 키워드", "keyword": topkeywordCountSerializer.data},
