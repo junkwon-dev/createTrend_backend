@@ -8,12 +8,12 @@ from elasticsearch_dsl import Q
 @api_view(["GET"])
 def keyword(request):
     search = request.query_params.get("search")
-    s=VideoDocument.search().filter('nested',path='videokeywordnews',query=Q('term', videokeywordnews__keyword=search))
+    s=VideoDocument.search().filter('nested',path='videokeywordnews',query=Q('term', videokeywordnews__keyword=search)).filter('range',upload_time={'gte':'now-7d/d','lt':"now"}).sort({"popularity":"desc"})[:100]
     returnlist=[]
     print(s)
     for hit in s:
         print(
             "Video name : {}".format(hit.video_name)
         )
-        returnlist.append({"video":hit.video_name})
+        returnlist.append({"video":hit.video_name,"upload_time":hit.upload_time,"popularity":hit.popularity})
     return Response(returnlist)
