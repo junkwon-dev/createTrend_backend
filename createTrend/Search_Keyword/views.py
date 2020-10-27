@@ -21,7 +21,7 @@ from django import db
 from django.db.models.functions import Coalesce
 from multiprocessing import Manager, Process
 from .documents import VideoDocument
-from elasticsearch_dsl import Q
+from elasticsearch_dsl import Q,A
 
 # from Search_Keyword.serializers import topComment
 # Create your views here.
@@ -62,11 +62,10 @@ def plus(search, start, end, return_dict, start_time):
         .filter('range',upload_time={'gte':'now-14d/d','lt':"now"})
     )
     imagingTransition.aggs.bucket('mola',A('date_histogram',field='upload_time',calendar_interval='1d'))
-    imagingTransition=imagingTransition.response()
+    imagingTransition=imagingTransition.execute()
     imagingTransitionList=[]
     for tag in imagingTransition.aggregations.mola.buckets:
         imagingTransitionList.append({'date':tag.key_as_string[:10],'count':tag.doc_count})
-        
     popularTransitionQuery = list(
         Video.objects.filter(
             videokeywordnew__keyword__regex=rf"(^| +){search}($| +)",
@@ -86,8 +85,8 @@ def plus(search, start, end, return_dict, start_time):
         .filter('range',upload_time={'gte':'now-14d/d','lt':"now"})
     )
     popularTransitionQuery.aggs.bucket('mola',A('avg',field='upload_time',calendar_interval='1d'))
-    imagingTransition=imagingTransition.response()
-    imagingTransitionList=[]
+    popularTransitionQuery=popularTransitionQuery.execute()()
+    popularTransitionQuery=[]
     for tag in imagingTransition.aggregations.mola.buckets:
         imagingTransitionList.append({'date':tag.key_as_string[:10],'count':tag.doc_count})
 
@@ -251,7 +250,7 @@ def keyword(request):
             manager = Manager()
             data_dict = manager.dict()
 
-            p1 = Process(target=plus, args=(search, start, end, data_dict, start_time))
+            # p1 = Process(target=plus, args=(search, start, end, data_dict, start_time))
             p2 = Process(
                 target=recentVideoSerializer, args=(search, start, end, data_dict, start_time),
             )
@@ -261,7 +260,7 @@ def keyword(request):
                 args=(search, start, end, data_dict, start_time),
             )
 
-            p1.start()
+            # p1.start()
             p2.start()
             p3.start()
             p4.start()
@@ -307,14 +306,41 @@ def keyword(request):
             end_time = time.time() - start_time
             print(f"response time : {end_time}")
 
-            p1.join()
+            # p1.join()
             p2.join()
             p3.join()
             p4.join()
 
             end_time = time.time() - start_time
             print(f"result time : {end_time}")
-
+            imagingTransition=(
+            VideoDocument
+                .search()
+                .filter('nested',path='videokeywordnews',query=Q('term', videokeywordnews__keyword=search))
+                .filter('range',upload_time={'gte':'now-14d/d','lt':"now"})
+            )
+            imagingTransition.aggs.bucket('mola',A('date_histogram',field='upload_time',calendar_interval='1d'))
+            response=imagingTransition.execute()
+            imagingTransitionList=[]
+            # print(response)
+            for tag in response.aggregations.mola.buckets:
+                imagingTransitionList.append({'date':tag.key_as_string[:10],'count':tag.doc_count})
+                
+                
+            #인기도추이
+            # popularTransition=(
+            # VideoDocument
+            #     .search()
+            #     .filter('nested',path='videokeywordnews',query=Q('term', videokeywordnews__keyword=search))
+            #     .filter('range',upload_time={'gte':'now-14d/d','lt':"now"})
+            # )
+            # imagingTransition.aggs.bucket('mola',A('date_histogram',field='upload_time',calendar_interval='1d'))
+            # response=imagingTransition.execute()
+            # imagingTransitionList=[]
+            # print(response)
+            for tag in response.aggregations.mola.buckets:
+                imagingTransitionList.append({'date':tag.key_as_string[:10],'count':tag.doc_count})    
+            
             return Response(
                 {
                     "video": [
@@ -327,7 +353,7 @@ def keyword(request):
                         "children": data_dict["wordmapItems"],
                     },
                     "lines": [
-                        {"type": "영상화 추이", "data": data_dict["imagingTransition"]},
+                        {"type": "영상화 추이", "data": imagingTransitionList},
                         # {"type": "인기도 추이", "data": data_dict["subscribers"]},
                     ],
                     "keyword": [

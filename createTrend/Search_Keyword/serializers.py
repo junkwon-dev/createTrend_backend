@@ -26,10 +26,10 @@ class TopVideoSerializer(serializers.HyperlinkedModelSerializer):
 
 class RecentVideoSerializer(serializers.HyperlinkedModelSerializer):
     # videoviews=VideoViewsSerializer(many=True,read_only=True)
-    # videokeywordnew=VideoKeywordSerializer(many=True,read_only=True)
+    videokeywordnew=VideoKeywordSerializer(many=True,read_only=True)
     class Meta:
         model = Video
-        fields = ['idx','video_name','video_id','thumbnail_url','popularity','views','views_growth']
+        fields = ['idx','video_name','video_id','thumbnail_url','popularity','views','views_growth','videokeywordnew']
         
 class KeywordCountSerializer(serializers.Serializer):
     name = serializers.CharField(max_length=200)
