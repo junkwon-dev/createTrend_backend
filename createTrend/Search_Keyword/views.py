@@ -59,7 +59,7 @@ def plus(search, start, end, return_dict, start_time):
         VideoDocument
         .search()
         .filter('nested',path='videokeywordnews',query=Q('term', videokeywordnews__keyword=search))
-        .filter('range',upload_time={'gte':'now-14d/d','lt':"now"})
+        .filter('range',upload_time={'gte':'now-7d/d','lt':"now"})
     )
     imagingTransition.aggs.bucket('mola',A('date_histogram',field='upload_time',calendar_interval='1d'))
     imagingTransition=imagingTransition.execute()
@@ -82,7 +82,7 @@ def plus(search, start, end, return_dict, start_time):
         VideoDocument
         .search()
         .filter('nested',path='videokeywordnews',query=Q('term', videokeywordnews__keyword=search))
-        .filter('range',upload_time={'gte':'now-14d/d','lt':"now"})
+        .filter('range',upload_time={'gte':'now-7d/d','lt':"now"})
     )
     popularTransitionQuery.aggs.bucket('mola',A('avg',field='upload_time',calendar_interval='1d'))
     popularTransitionQuery=popularTransitionQuery.execute()()
