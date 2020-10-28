@@ -120,7 +120,7 @@ def recentVideoSerializer(search, start, end, return_dict, start_time):
     recent_video=(
         VideoDocument
         .search()
-        .filter('nested',path='videokeywordnews',query=Q('term', videokeywordnews__keyword=search))
+        .filter('term', videokeywordnews__keyword=search)
         .filter('range',upload_time={'gte':'now-14d/d','lt':"now"})
         .sort({"views_growth":"desc"})[:5]
     )
@@ -150,7 +150,7 @@ def wordmapItems(search, start, end, return_dict, start_time):
     keyword_video=(
         VideoDocument
         .search()
-        .filter('nested',path='videokeywordnews',query=Q('term', videokeywordnews__keyword=search))
+        .filter('term', videokeywordnews__keyword=search)
         .filter('range',upload_time={'gte':'now-14d/d','lt':"now"})
         .sort({"upload_time":"desc"})[:100]
     )
@@ -204,7 +204,7 @@ def topImagingKeywordCountSerializer(search, start, end, return_dict, start_time
     imagingTransitionKeyword=(
         VideoDocument
         .search()
-        .filter('nested',path='videokeywordnews',query=Q('term', videokeywordnews__keyword=search))
+        .filter('term', videokeywordnews__keyword=search)
         .filter('range',upload_time={'gte':'now-14d/d','lt':"now"})
     )
     topImagingKeywords = []
@@ -278,7 +278,7 @@ def keyword(request):
             popularTopKeyword=(
                 VideoDocument
                 .search()
-                .filter('nested',path='videokeywordnews',query=Q('term', videokeywordnews__keyword=search))
+                .filter('term', videokeywordnews__keyword=search)
                 .filter('range',upload_time={'gte':'now-14d/d','lt':"now"})
                 .sort({"popularity":"desc"})[:100]
             )
@@ -316,7 +316,7 @@ def keyword(request):
             imagingTransition=(
             VideoDocument
                 .search()
-                .filter('nested',path='videokeywordnews',query=Q('term', videokeywordnews__keyword=search))
+                .filter('term', videokeywordnews__keyword=search)
                 .filter('range',upload_time={'gte':'now-14d/d','lt':"now"})
             )
             imagingTransition.aggs.bucket('mola',A('date_histogram',field='upload_time',calendar_interval='1d'))

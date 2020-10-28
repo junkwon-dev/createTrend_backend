@@ -8,7 +8,8 @@ from elasticsearch_dsl import Q, A
 @api_view(["GET"])
 def keyword(request):
     search = request.query_params.get("search")
-    s=VideoDocument.search().filter('nested',path='videokeywordnews',query=Q('term', videokeywordnews__keyword=search)).filter('range',upload_time={'gte':'now-7d/d','lt':"now"})
+    # s=VideoDocument.search().filter('nested',path='videokeywordnews',query=Q('term', videokeywordnews__keyword=search)).filter('range',upload_time={'gte':'now-7d/d','lt':"now"})
+    s=VideoDocument.search().filter('term', videokeywordnews__keyword=search).filter('range',upload_time={'gte':'now-14d/d','lt':"now"})
     s.aggs.bucket('mola',A('date_histogram',field='upload_time',calendar_interval='1d'))
     response=s.execute()
     print(response.hits.total)
