@@ -10,6 +10,8 @@ from .models import Channel, VideoKeywordNew, Video, ChannelSubscriber, VideoVie
 from .serializers import VideoKeywordSerializer, KeywordCountSerializer, VideoSerializer
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
+from .documents import VideoDocument
+from elasticsearch_dsl import Q,A
 
 param_keyword_data_search_hint = openapi.Parameter(
     'search',
@@ -106,28 +108,44 @@ def keyword_data(request):
         start = timezone.now() - datetime.timedelta(days=30)
         start = start.strftime("%Y-%m-%d")
         end = timezone.now().strftime("%Y-%m-%d")
-        popularTransitionQuery = list(Video.objects \
-                                      .filter(videokeywordnew__keyword__contains=keyword,
-                                              upload_time__range=(start, end), popularity__isnull=False)
-                                      .extra(select={'date': "TO_CHAR(upload_time, 'YYYY-MM-DD')"}).values('date')
-                                      .annotate(value=Coalesce(Sum('popularity'), 0)))
+        # popularTransitionQuery = list(Video.objects \
+        #                               .filter(videokeywordnew__keyword__contains=keyword,
+        #                                       upload_time__range=(start, end), popularity__isnull=False)
+        #                               .extra(select={'date': "TO_CHAR(upload_time, 'YYYY-MM-DD')"}).values('date')
+        #                               .annotate(value=Coalesce(Sum('popularity'), 0)))
 
-        subscribers = {}
-        popularTransition = []
-        popularDictSum = 0
-        for subdictKey in popularTransitionQuery:
-            print(subdictKey['date'], subdictKey['value'])
-            popularTransition.append({"date": subdictKey['date'], "value": round(subdictKey['value'],1)})
-            try:
-                popularDictSum += subdictKey['value']
-            except:
-                pass
-        try:
-            avgPopularDict = popularDictSum / len(popularTransitionQuery)
-        except:
-            avgPopularDict = 0
+        # subscribers = {}
+        # popularTransition = []
+        # popularDictSum = 0
+        # for subdictKey in popularTransitionQuery:
+        #     print(subdictKey['date'], subdictKey['value'])
+        #     popularTransition.append({"date": subdictKey['date'], "value": round(subdictKey['value'],1)})
+        #     try:
+        #         popularDictSum += subdictKey['value']
+        #     except:
+        #         pass
+        # try:
+        #     avgPopularDict = popularDictSum / len(popularTransitionQuery)
+        # except:
+        #     avgPopularDict = 0
+        popularTransition=(
+            VideoDocument
+                .search()
+                .filter('term', videokeywordnews__keyword=search)
+                .filter('range',upload_time={'gte':'now-8d/d','lt':"now"})
+            )
+        popularTransition.aggs.bucket('mola',A('date_histogram',field='upload_time',calendar_interval='1d'))\
+            .metric('popularity_per_day', A('avg', field='popularity'))
+        response=popularTransition.execute()
+        popularTransitionList=[]
+        popularDictSum=0
+        for tag in response.aggregations.mola.buckets:
+            popularTransitionList.append({'date':tag.key_as_string[:10],'value':tag.popularity_per_day.value*100})   
+            popularDictSum+= tag.popularity_per_day.value*100
+        avgPopularDict=popularDictSum / 7
+            
         keywordVideo = Video.objects \
-                           .filter(videokeywordnew__keyword__contains=keyword, upload_time__range=(start, end)) \
+                           .filter(videokeywordnew__keyword=keyword, upload_time__range=(start, end)) \
                            .order_by('-upload_time')[:500].prefetch_related('videokeywordnew')
         keywords = []
         for video in keywordVideo:
@@ -177,7 +195,7 @@ def keyword_data(request):
         return Response({"type": "인기", "keyword": [{"name": keyword, "popular": avgPopularDict,
                                                     "wordmap": {"name": keyword,'color': '#666',
                                                                 "children": wordmapItems},
-                                                    "lines": {"type": "인기도 추이", "data": popularTransition},
+                                                    "lines": {"type": "인기도 추이", "data": popularTransitionList},
                                                     "video": {"type": "analysis",
                                                               "data": popularVideoSerializer.data}}]})
 
