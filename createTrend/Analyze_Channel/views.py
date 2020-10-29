@@ -135,7 +135,7 @@ def keyword_data(request):
                 .filter('range',upload_time={'gte':'now-8d/d','lt':"now"})
             )
         popularTransition.aggs.bucket('mola',A('date_histogram',field='upload_time',calendar_interval='1d'))\
-            .metric('popularity_per_day', A('sum', field='popularity'))
+            .metric('popularity_per_day', A('avg', field='popularity'))
         response=popularTransition.execute()
         popularTransitionList=[]
         popularDictSum=0
