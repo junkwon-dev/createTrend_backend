@@ -259,7 +259,7 @@ def keyword(request):
             popularTopKeyword=(
                 VideoDocument
                 .search()
-                .filter('term', videokeywordnews__keyword=search)
+                .filter('match', videokeywordnews__keyword=search)
                 .filter('range', popularity={'lt':7})
                 .filter('range',upload_time={'gte':'now-14d/d','lt':"now"})
                 .sort({"popularity":"desc"})[:100]
@@ -298,7 +298,7 @@ def keyword(request):
             imagingTransition=(
             VideoDocument
                 .search()
-                .filter('term', videokeywordnews__keyword=search)
+                .filter('match', videokeywordnews__keyword=search)
                 .filter('range', popularity={'lt':7})
                 .filter('range',upload_time={'gte':'now-8d/d','lt':"now"})
             )
@@ -314,7 +314,7 @@ def keyword(request):
             popularTransition=(
             VideoDocument
                 .search()
-                .filter('term', videokeywordnews__keyword=search)
+                .filter('match', videokeywordnews__keyword=search)
                 .filter('range',upload_time={'gte':'now-8d/d','lt':"now"})
             )
             popularTransition.aggs.bucket('mola',A('date_histogram',field='upload_time',calendar_interval='1d'))\
@@ -329,7 +329,7 @@ def keyword(request):
             keyword_video=(
                 VideoDocument
                 .search()
-                .filter('term', videokeywordnews__keyword=search)
+                .filter('match', videokeywordnews__keyword=search)
                 .filter('range',upload_time={'gte':'now-14d/d','lt':"now"})
                 .sort({"upload_time":"desc"})[:100]
             )
@@ -367,7 +367,7 @@ def keyword(request):
             recent_video=(
                 VideoDocument
                 .search()
-                .filter('term', videokeywordnews__keyword=search)
+                .filter('match', videokeywordnews__keyword=search)
                 .filter('range', popularity={'lt':7})
                 .filter('range',upload_time={'gte':'now-14d/d','lt':"now"})
                 .sort({"views_growth":"desc"})[:5]
@@ -382,7 +382,7 @@ def keyword(request):
             topImagingKeywordQuery=(
                 VideoDocument
                 .search()
-                .filter('term', videokeywordnews__keyword=search)
+                .filter('match', videokeywordnews__keyword=search)
                 .filter('range',upload_time={'gte':'now-14d/d','lt':"now"})
             )
             topImagingKeywords = []

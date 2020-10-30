@@ -128,10 +128,11 @@ def keyword_data(request):
         #     avgPopularDict = popularDictSum / len(popularTransitionQuery)
         # except:
         #     avgPopularDict = 0
+        # search_keyword=keyword.split()
         popularTransition=(
             VideoDocument
                 .search()
-                .filter('term', videokeywordnews__keyword=keyword)
+                .filter('match', videokeywordnews__keyword=keyword)
                 .filter('range',upload_time={'gte':'now-8d/d','lt':"now"})
             )
         popularTransition.aggs.bucket('mola',A('date_histogram',field='upload_time',calendar_interval='1d'))\
