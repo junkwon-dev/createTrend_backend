@@ -86,18 +86,8 @@ def simple_recommendation(request):
 @api_view(['GET'])        
 def advanced_recommendation(request):
     keyword_string = request.query_params.get("keyword_string")
-    must_keyword = request.query_params.get("must_keywrod")
+    must_keyword = request.query_params.get("must_keyword")
     must_not_keyword = request.query_params.get("must_not_keyword")
-    body = {
-        "query": {
-            "bool": {
-                "must": [
-                    {"match": {"videokeywordnews.keyword": keyword_string}}
-                ],
-                "must_not": []
-            }
-        }
-    }
     must_keyword_list=[]
     must_not_keyword_list=[]
     must_keyword_list.append(keyword_string)
@@ -110,7 +100,12 @@ def advanced_recommendation(request):
     except:
         pass
 
-    res = VideoDocument.search().filter("match",videokeywordnews__keyword=keyword_string).exclude("terms",videokeywordnews__keyword=must_not_keyword_list).filter("terms",videokeywordnews__keyword=must_keyword_list)
+    res = (
+        VideoDocument.search()
+        .filter("match",videokeywordnews__keyword=keyword_string)
+        .exclude("terms",videokeywordnews__keyword=must_not_keyword_list)
+        .filter("terms",videokeywordnews__keyword=must_keyword_list)
+    )
     # .filter("bool",Q("must_not",Q("terms",videokeywordnews__keyword=must_not_keyword_list)))
     idxs=[row.idx for row in res]
     return Response(idxs)
