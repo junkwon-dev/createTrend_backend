@@ -275,16 +275,16 @@ def analyze_channel(request):
     popularTopKeyword=(
                 VideoDocument
                 .search()
-                .filter('range', popularity={'lte':500})
+                .filter('range', popularity={'lte':50})
                 .exclude('terms',channel_idx=[2409, 2438, 2544, 2388, 2465, 2412, 2386, 1063, 2417, 2488, 2476, 2357, 2425, 2416, 2454, 2461, 2399, 1069, 2394, 2422])
-                .filter('range', upload_time={'gte':'now-7d/d','lt':"now"})
+                .filter('range', upload_time={'gte':'now-4d/d','lt':"now"})
                 .sort({"popularity":"desc"})[:300]
             )
     topPopularKeywords = []
 
     for popularKeyword in popularTopKeyword:
         # print(VideoKeywordNew.objects.filter(video_idx=popularKeyword.idx))
-        keyword = [keywords.keyword for keywords in popularKeyword.videokeywordnews if keywords.keyword not in ["뉴스","게임"] ]
+        keyword = [keywords.keyword for keywords in popularKeyword.videokeywordnews if keywords.keyword not in ["뉴스","게임","해외반응", "만화", "애니", "모바일게임","한국","일본"] ]
         topPopularKeywords.append(keyword)
     topPopularKeywords = list(itertools.chain(*topPopularKeywords))
     counter = collections.Counter(topPopularKeywords)
@@ -315,7 +315,7 @@ def analyze_channel(request):
             )
     topImagingKeywords = []
     for imagingkeywordvideo in imagingTransitionKeyword:
-        keyword = [keywords.keyword for keywords in imagingkeywordvideo.videokeywordnews if keywords.keyword not in ["yt:cc=on",'게임','모바일게임','축구','브이로그','애니메이션']]
+        keyword = [keywords.keyword for keywords in imagingkeywordvideo.videokeywordnews if keywords.keyword not in ["yt:cc=on",'게임','모바일게임','축구','브이로그','애니메이션',"주식", "뉴스", "강의", "미국","한국","일본","리그오브레전드","LOL"]]
         topImagingKeywords.append(keyword)
     end_time = time.time() - start_time
     print(f'response time : {end_time}')
