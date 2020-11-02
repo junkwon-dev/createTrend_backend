@@ -51,7 +51,7 @@ def keyword_data(request):
         imagingTransition=(
             VideoDocument
                 .search()
-                .filter('match', videokeywordnews__keyword=search)
+                .filter('match', videokeywordnews__keyword=keyword)
                 .filter('range', popularity={'lt':7})
                 .filter('range',upload_time={'gte':'now-8d/d','lt':"now"})
             )
@@ -61,13 +61,13 @@ def keyword_data(request):
         # print(response)
         for tag in response.aggregations.mola.buckets:
             imagingTransitionList.append({'date':tag.key_as_string[:10],'value':tag.doc_count})
-                
+        print(imagingTransitionList)
             
         imagingVideoSum = 0
-        for imagingvideo in imagingTransition:
+        for imagingvideo in imagingTransitionList:
             imagingVideoSum += imagingvideo['value']
         try:
-            avgImaging = imagingVideoSum / len(imagingTransition)
+            avgImaging = imagingVideoSum / len(imagingTransitionList)
         except:
             avgImaging = 0
         # keywordVideo = Video.objects \
@@ -128,7 +128,7 @@ def keyword_data(request):
         print(f'response time : {end_time}')
         return Response({"type": "영상", "keyword": [{"name": keyword, "popular": avgImaging, "wordmap": {"name": keyword,'color': '#666',
                                                                                                         "children": wordmapItems},
-                                                    "lines": {'type': "영상화 추이", 'data': imagingTransition},
+                                                    "lines": {'type': "영상화 추이", 'data': imagingTransitionList},
                                                     "video": {"type": "analysis",
                                                               "data": topViewVideoSerializer.data}}]})
     elif (search == '인기' and keyword):
