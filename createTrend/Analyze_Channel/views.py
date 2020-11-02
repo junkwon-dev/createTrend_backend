@@ -143,9 +143,10 @@ def keyword_data(request):
         for tag in response.aggregations.mola.buckets:
             if tag.popularity_per_day.value is not None:
                     popularTransitionList.append({'date':tag.key_as_string[:10],'value':tag.popularity_per_day.value*100})  
+                    popularDictSum+= tag.popularity_per_day.value*100
             else:
                 popularTransitionList.append({'date':tag.key_as_string[:10],'value':0})  
-            popularDictSum+= tag.popularity_per_day.value*100
+            
         avgPopularDict=popularDictSum / 7
             
         keywordVideo = Video.objects \
