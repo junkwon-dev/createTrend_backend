@@ -261,7 +261,7 @@ def keyword(request):
                 .search()
                 .filter('match', videokeywordnews__keyword=search)
                 .filter('range', popularity={'lt':7})
-                .filter('range',upload_time={'gte':'now-14d/d','lt':"now"})
+                .filter('range', upload_time={'gte':'now-14d/d','lt':"now"})
                 .sort({"popularity":"desc"})[:100]
             )
             topVideo = popularTopKeyword[:5]
@@ -323,7 +323,10 @@ def keyword(request):
             popularTransitionList=[]
             print(response)
             for tag in response.aggregations.mola.buckets:
-                popularTransitionList.append({'date':tag.key_as_string[:10],'value':tag.popularity_per_day.value*100})    
+                if tag.popularity_per_day.value is not None:
+                    popularTransitionList.append({'date':tag.key_as_string[:10],'value':tag.popularity_per_day.value*100})  
+                else:
+                    popularTransitionList.append({'date':tag.key_as_string[:10],'value':0})  
             
             #워드맵
             keyword_video=(

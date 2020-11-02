@@ -141,7 +141,10 @@ def keyword_data(request):
         popularTransitionList=[]
         popularDictSum=0
         for tag in response.aggregations.mola.buckets:
-            popularTransitionList.append({'date':tag.key_as_string[:10],'value':tag.popularity_per_day.value*100})   
+            if tag.popularity_per_day.value is not None:
+                    popularTransitionList.append({'date':tag.key_as_string[:10],'value':tag.popularity_per_day.value*100})  
+            else:
+                popularTransitionList.append({'date':tag.key_as_string[:10],'value':0})  
             popularDictSum+= tag.popularity_per_day.value*100
         avgPopularDict=popularDictSum / 7
             
@@ -223,7 +226,7 @@ def analyze_channel(request):
 
     popularTopKeyword = list(Video.objects.prefetch_related('videokeywordnew') \
                              .filter(popularity__lt=500,upload_time__range=(start,end))
-                             .exclude(channel_idx__in=[2409, 2438, 2544, 2388, 2465, 2412, 2386, 1063, 2417, 2488, 2476, 2357, 2425, 2416, 2454, 2461, 2399, 1069, 2394, 2422]).filter(upload_time__range=(start, end)) \
+                             .exclude(channel_idx__in=["2409", 2438, 2544, 2388, 2465, 2412, 2386, 1063, 2417, 2488, 2476, 2357, 2425, 2416, 2454, 2461, 2399, 1069, 2394, 2422]).filter(upload_time__range=(start, end)) \
                              .order_by(F('popularity').desc(nulls_last=True))[:300])
     topPopularKeywords = []
 
@@ -251,7 +254,7 @@ def analyze_channel(request):
                                     .order_by(F('upload_time').desc(nulls_last=True))[:700])
     topImagingKeywords = []
     for imagingkeywordvideo in imagingTransitionKeyword:
-        keyword = [keywords.keyword for keywords in imagingkeywordvideo.videokeywordnew.exclude(keyword__in=["yt:cc=on"])]
+        keyword = [keywords.keyword for keywords in imagingkeywordvideo.videokeywordnew.exclude(keyword__in=["yt:cc=on",'게임','모바일게임'])]
         topImagingKeywords.append(keyword)
     end_time = time.time() - start_time
     print(f'response time : {end_time}')
