@@ -8,6 +8,9 @@ from rest_framework.decorators import api_view
 from django.utils import timezone
 from datetime import datetime, timedelta
 import datetime, itertools, collections, time
+from .documents import VideoDocument
+from elasticsearch_dsl import Q
+
 
 @api_view(['POST'])
 def videoViewsPredict(request):
@@ -72,5 +75,45 @@ def videoViewsPredict(request):
             return Response({'lines':{'type':"조회수 추이","data":views_predict_transition}})
         else:
             return Response()
+        
+@api_view(['GET'])        
+def simple_recommendation(request):
+    keyword_string = request.query_params.get("keyword_string")
+    res=VideoDocument.search().filter('match', videokeywordnews__keyword=keyword_string).filter('range',upload_time={'gte':'now-30d/d','lt':"now"})
+    idxs=[row.idx for row in res]
+    return Response(idxs)
 
+@api_view(['GET'])        
+def advanced_recommendation(request):
+    keyword_string = request.query_params.get("keyword_string")
+    must_keyword = request.query_params.get("must_keywrod")
+    must_not_keyword = request.query_params.get("must_not_keyword")
+    body = {
+        "query": {
+            "bool": {
+                "must": [
+                    {"match": {"videokeywordnews.keyword": keyword_string}}
+                ],
+                "must_not": []
+            }
+        }
+    }
+    must_keyword_list=[]
+    must_not_keyword_list=[]
+    must_keyword_list.append(keyword_string)
+    try:
+        must_keyword_list.append({"term": {"videokeywordnews.keyword": must_keyword.split(" ")}})
+    except:
+        pass
+    try:
+        must_not_keyword_list.append({"terms": {"videokeywordnews.keyword": must_not_keyword.split(" ")}})
+    except:
+        pass
+
+    res = VideoDocument.search().filter("match",videokeywordnews__keyword=keyword_string).exclude("terms",videokeywordnews__keyword=must_not_keyword_list).filter("terms",videokeywordnews__keyword=must_keyword_list)
+    # .filter("bool",Q("must_not",Q("terms",videokeywordnews__keyword=must_not_keyword_list)))
+    idxs=[row.idx for row in res]
+    return Response(idxs)
+
+    
             

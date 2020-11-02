@@ -44,10 +44,25 @@ def keyword_data(request):
         start = start.strftime("%Y-%m-%d")
         end = timezone.now().strftime("%Y-%m-%d")
 
-        imagingTransition = list(Video.objects \
-                                 .filter(videokeywordnew__keyword=keyword, upload_time__range=(start, end)) \
-                                 .extra(select={'date': "TO_CHAR(upload_time, 'YYYY-MM-DD')"}).values('date') \
-                                 .annotate(value=Count('idx')))
+        # imagingTransition = list(Video.objects \
+        #                          .filter(videokeywordnew__keyword=keyword, upload_time__range=(start, end)) \
+        #                          .extra(select={'date': "TO_CHAR(upload_time, 'YYYY-MM-DD')"}).values('date') \
+        #                          .annotate(value=Count('idx')))
+        imagingTransition=(
+            VideoDocument
+                .search()
+                .filter('match', videokeywordnews__keyword=search)
+                .filter('range', popularity={'lt':7})
+                .filter('range',upload_time={'gte':'now-8d/d','lt':"now"})
+            )
+        imagingTransition.aggs.bucket('mola',A('date_histogram',field='upload_time',calendar_interval='1d'))
+        response=imagingTransition.execute()
+        imagingTransitionList=[]
+        # print(response)
+        for tag in response.aggregations.mola.buckets:
+            imagingTransitionList.append({'date':tag.key_as_string[:10],'value':tag.doc_count})
+                
+            
         imagingVideoSum = 0
         for imagingvideo in imagingTransition:
             imagingVideoSum += imagingvideo['value']
@@ -55,12 +70,19 @@ def keyword_data(request):
             avgImaging = imagingVideoSum / len(imagingTransition)
         except:
             avgImaging = 0
-        keywordVideo = Video.objects \
-                           .filter(videokeywordnew__keyword=keyword, upload_time__range=(start, end)) \
-                           .order_by('-upload_time')[:500].prefetch_related('videokeywordnew')
+        # keywordVideo = Video.objects \
+        #                    .filter(videokeywordnew__keyword=keyword, upload_time__range=(start, end)) \
+        #                    .order_by('-upload_time')[:500].prefetch_related('videokeywordnew')
+        keywordVideo=(
+                VideoDocument
+                .search()
+                .filter('match', videokeywordnews__keyword=keyword)
+                .filter('range', upload_time={'gte':'now-14d/d','lt':"now"})
+                .sort({"upload_time":"desc"})[:500]
+            )
         keywords = []
         for video in keywordVideo:
-            videokeytmp = [videokeyword.keyword for videokeyword in video.videokeywordnew.all()]
+            videokeytmp = [videokeyword.keyword for videokeyword in video.videokeywordnews]
             keywords.append(videokeytmp)
         keywords = list(itertools.chain(*keywords))
         # while keyword in keywords:
@@ -76,8 +98,15 @@ def keyword_data(request):
 
         keywords = [Keyword(keyword=keyword) for keyword in keywords]
         keywordCountSerializer = KeywordCountSerializer(keywords, many=True)
-        topViewVideo = Video.objects.filter(videokeywordnew__keyword=keyword, upload_time__range=(start, end)) \
-                           .order_by('-views')[:5]
+        # topViewVideo = Video.objects.filter(videokeywordnew__keyword=keyword, upload_time__range=(start, end)) \
+        #                    .order_by('-views')[:5]
+        topViewVideo=(
+                VideoDocument
+                .search()
+                .filter('match', videokeywordnews__keyword=keyword)
+                .filter('range', upload_time={'gte':'now-7d/d','lt':"now"})
+                .sort({"views":"desc"})[:5]
+            )
         topViewVideoSerializer = VideoSerializer(topViewVideo, many=True)
         # return Response([imagingTransition,keywordCountSerializer.data])
         wordmapItems = keywordCountSerializer.data
@@ -149,12 +178,19 @@ def keyword_data(request):
             
         avgPopularDict=popularDictSum / 7
             
-        keywordVideo = Video.objects \
-                           .filter(videokeywordnew__keyword=keyword, upload_time__range=(start, end)) \
-                           .order_by('-upload_time')[:500].prefetch_related('videokeywordnew')
+        # keywordVideo = Video.objects \
+        #                    .filter(videokeywordnew__keyword=keyword, upload_time__range=(start, end)) \
+        #                    .order_by('-upload_time')[:500].prefetch_related('videokeywordnew')
+        keywordVideo=(
+                VideoDocument
+                .search()
+                .filter('match', videokeywordnews__keyword=keyword)
+                .filter('range', upload_time={'gte':'now-7d/d','lt':"now"})
+                .sort({"upload_time":"desc"})[:500]
+            )
         keywords = []
         for video in keywordVideo:
-            videokeytmp = [videokeyword.keyword for videokeyword in video.videokeywordnew.all()]
+            videokeytmp = [videokeyword.keyword for videokeyword in video.videokeywordnews]
             keywords.append(videokeytmp)
         keywords = list(itertools.chain(*keywords))
         # while keyword in keywords:
@@ -172,9 +208,16 @@ def keyword_data(request):
 
         keywords = [Keyword(keyword=keyword) for keyword in keywords]
 
-        popularVideo = Video.objects.filter(
-            videokeywordnew__keyword=keyword, upload_time__range=(start, end)
-        ).order_by('-views')[:5]
+        # popularVideo = Video.objects.filter(
+        #     videokeywordnew__keyword=keyword, upload_time__range=(start, end)
+        # ).order_by('-views')[:5]
+        popularVideo=(
+                VideoDocument
+                .search()
+                .filter('match', videokeywordnews__keyword=keyword)
+                .filter('range', upload_time={'gte':'now-7d/d','lt':"now"})
+                .sort({"views":"desc"})[:5]
+            )
         # .order_by(F('popularity').desc(nulls_last=True))[:5]
         popularVideoSerializer = VideoSerializer(popularVideo, many=True)
 
@@ -225,15 +268,23 @@ def analyze_channel(request):
             self.name = keyword['name']
             self.value = keyword['value']
 
-    popularTopKeyword = list(Video.objects.prefetch_related('videokeywordnew') \
-                             .filter(popularity__lt=500,upload_time__range=(start,end))
-                             .exclude(channel_idx__in=["2409", 2438, 2544, 2388, 2465, 2412, 2386, 1063, 2417, 2488, 2476, 2357, 2425, 2416, 2454, 2461, 2399, 1069, 2394, 2422]).filter(upload_time__range=(start, end)) \
-                             .order_by(F('popularity').desc(nulls_last=True))[:300])
+    # popularTopKeyword = list(Video.objects.prefetch_related('videokeywordnew') \
+    #                          .filter(popularity__lt=500,upload_time__range=(start,end))
+    #                          .exclude(channel_idx__in=[2409, 2438, 2544, 2388, 2465, 2412, 2386, 1063, 2417, 2488, 2476, 2357, 2425, 2416, 2454, 2461, 2399, 1069, 2394, 2422]).filter(upload_time__range=(start, end)) \
+    #                          .order_by(F('popularity').desc(nulls_last=True))[:300])
+    popularTopKeyword=(
+                VideoDocument
+                .search()
+                .filter('range', popularity={'lte':500})
+                .exclude('terms',channel_idx=[2409, 2438, 2544, 2388, 2465, 2412, 2386, 1063, 2417, 2488, 2476, 2357, 2425, 2416, 2454, 2461, 2399, 1069, 2394, 2422])
+                .filter('range', upload_time={'gte':'now-7d/d','lt':"now"})
+                .sort({"popularity":"desc"})[:300]
+            )
     topPopularKeywords = []
 
     for popularKeyword in popularTopKeyword:
         # print(VideoKeywordNew.objects.filter(video_idx=popularKeyword.idx))
-        keyword = [keywords.keyword for keywords in popularKeyword.videokeywordnew.all()]
+        keyword = [keywords.keyword for keywords in popularKeyword.videokeywordnews if keywords.keyword not in ["뉴스","게임"] ]
         topPopularKeywords.append(keyword)
     topPopularKeywords = list(itertools.chain(*topPopularKeywords))
     counter = collections.Counter(topPopularKeywords)
@@ -249,13 +300,22 @@ def analyze_channel(request):
     #                                 .exclude(channel_idx__in=[2409, 2438, 2544, 2388, 2465, 2412, 2386, 1063, 2417, 2488, 2476, 2357, 2425, 2416, 2454, 2461, 2399, 1069, 2394, 2422])\
     #                                 .filter(upload_time__range=(start, end)) \
     #                                 .order_by(F('upload_time').desc(nulls_last=True))[:500])
-    imagingTransitionKeyword = list(Video.objects.prefetch_related('videokeywordnew') \
-                                    .filter(crawled=True, popularity__gt=0.3)\
-                                    .exclude(channel_idx__in=[2409, 2438, 2544, 2388, 2465, 2412, 2386, 1063, 2417, 2488, 2476, 2357, 2425, 2416, 2454, 2461, 2399, 1069, 2394, 2422, 484, 2291,2567, 2565, 2572, 2464, 2592, 2564,2570,2577,2508,2575,2568,2418,2527,2539,2436,2589,2571,2574,2169,2596,2293,739,2289,701,736,1877,2463,1561,605,2157,497,1318,493,566,568,766,707,535,756,10307]) \
-                                    .order_by(F('upload_time').desc(nulls_last=True))[:700])
+    # imagingTransitionKeyword = list(Video.objects.prefetch_related('videokeywordnew') \
+    #                                 .filter(crawled=True, popularity__gt=0.3)\
+    #                                 .exclude(channel_idx__in=[2409, 2438, 2544, 2388, 2465, 2412, 2386, 1063, 2417, 2488, 2476, 2357, 2425, 2416, 2454, 2461, 2399, 1069, 2394, 2422, 484, 2291,2567, 2565, 2572, 2464, 2592, 2564,2570,2577,2508,2575,2568,2418,2527,2539,2436,2589,2571,2574,2169,2596,2293,739,2289,701,736,1877,2463,1561,605,2157,497,1318,493,566,568,766,707,535,756,10307]) \
+    #                                 .order_by(F('upload_time').desc(nulls_last=True))[:700])
+    imagingTransitionKeyword=(
+                VideoDocument
+                .search()
+                .filter('range', popularity={'gte':0.3})
+                .filter('term', crawled=True)
+                .exclude('terms',channel_idx=[2409, 2438, 2544, 2388, 2465, 2412, 2386, 1063, 2417, 2488, 2476, 2357, 2425, 2416, 2454, 2461, 2399, 1069, 2394, 2422, 484, 2291,2567, 2565, 2572, 2464, 2592, 2564,2570,2577,2508,2575,2568,2418,2527,2539,2436,2589,2571,2574,2169,2596,2293,739,2289,701,736,1877,2463,1561,605,2157,497,1318,493,566,568,766,707,535,756,10307])
+                .filter('range', upload_time={'gte':'now-7d/d','lt':"now"})
+                .sort({"upload_time":"desc"})[:700]
+            )
     topImagingKeywords = []
     for imagingkeywordvideo in imagingTransitionKeyword:
-        keyword = [keywords.keyword for keywords in imagingkeywordvideo.videokeywordnew.exclude(keyword__in=["yt:cc=on",'게임','모바일게임'])]
+        keyword = [keywords.keyword for keywords in imagingkeywordvideo.videokeywordnews if keywords.keyword not in ["yt:cc=on",'게임','모바일게임','축구','브이로그','애니메이션']]
         topImagingKeywords.append(keyword)
     end_time = time.time() - start_time
     print(f'response time : {end_time}')
