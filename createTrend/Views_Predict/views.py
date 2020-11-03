@@ -9,6 +9,7 @@ from django.utils import timezone
 from datetime import datetime, timedelta
 import datetime, itertools, collections, time
 from .documents import VideoDocument
+from .models import Video,Channel
 from elasticsearch_dsl import Q
 
 
@@ -79,9 +80,19 @@ def videoViewsPredict(request):
 @api_view(['GET'])        
 def simple_recommendation(request):
     keyword_string = request.query_params.get("keyword_string")
-    res=VideoDocument.search().filter('match', videokeywordnews__keyword=keyword_string).filter('range',upload_time={'gte':'now-30d/d','lt':"now"})
+    res=(VideoDocument.search()
+         .filter('match', videokeywordnews__keyword=keyword_string)
+         .filter('range',upload_time={'gte':'now-30d/d','lt':"now"})
+         .sort({'popularity':"desc"}))
     idxs=[row.idx for row in res]
-    return Response(idxs)
+    res=[]
+    for idx in idxs:
+        video=Video.objects.get(pk=idx)
+        channel_thumbnail_url=video.channel_idx.thumbnail_url
+        video_thumbnail_url=video.thumbnail_url
+        video_name=video.video_name
+        res.append({"idx":idx,"channel_thumbnail_url":channel_thumbnail_url,"video_thumbnail_url":video_thumbnail_url,"video_name":video_name})
+    return Response(res)
 
 @api_view(['GET'])        
 def advanced_recommendation(request):
@@ -92,11 +103,12 @@ def advanced_recommendation(request):
     must_not_keyword_list=[]
     must_keyword_list.append(keyword_string)
     try:
-        must_keyword_list.append({"term": {"videokeywordnews.keyword": must_keyword.split(" ")}})
+        must_keyword_list=must_keyword.split(" ")
     except:
         pass
     try:
-        must_not_keyword_list.append({"terms": {"videokeywordnews.keyword": must_not_keyword.split(" ")}})
+        must_not_keyword_list=must_not_keyword.split(" ")
+        print(must_not_keyword_list)
     except:
         pass
 
@@ -105,10 +117,18 @@ def advanced_recommendation(request):
         .filter("match",videokeywordnews__keyword=keyword_string)
         .exclude("terms",videokeywordnews__keyword=must_not_keyword_list)
         .filter("terms",videokeywordnews__keyword=must_keyword_list)
+        .sort({'popularity':"desc"})
     )
     # .filter("bool",Q("must_not",Q("terms",videokeywordnews__keyword=must_not_keyword_list)))
     idxs=[row.idx for row in res]
-    return Response(idxs)
+    res=[]
+    for idx in idxs:
+        video=Video.objects.get(pk=idx)
+        channel_thumbnail_url=video.channel_idx.thumbnail_url
+        video_thumbnail_url=video.thumbnail_url
+        video_name=video.video_name
+        res.append({"idx":idx,"channel_thumbnail_url":channel_thumbnail_url,"video_thumbnail_url":video_thumbnail_url,"video_name":video_name})
+    return Response(res)
 
     
             
