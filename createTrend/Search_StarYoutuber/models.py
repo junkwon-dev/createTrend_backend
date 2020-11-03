@@ -290,6 +290,7 @@ class Video(models.Model):
     thumbnail_url = models.CharField(max_length=200, blank=True, null=True)
     thumbnail_processed = models.BooleanField(blank=True, null=True)
     forbidden = models.BooleanField(blank=True, null=True)
+    views = models.IntegerField()
 
     class Meta:
         managed = False

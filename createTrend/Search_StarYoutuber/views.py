@@ -34,18 +34,13 @@ def channelinfo(request,pk):
     if request.method == 'GET':
         videos = channel.video\
                 .annotate(hottest_video_made_at=Max('videoviews__check_time')) 
-        hottest_videos = VideoViews.objects.filter(
-            check_time__in=[v.hottest_video_made_at for v in videos]
-            ).order_by('-views')[:5]
-        topViewVideos=[]
-        for hv in hottest_videos:
-            topViewVideos.append(hv.video_idx)
+        hottest_videos = channel.video.order_by('-views')[:5]
             
         topChannelSubscriber = channel.channelsubscriber\
             .order_by('-check_time')[:1]
 
 
-        videos = channel.video.prefetch_related('videokeywordnew')
+        videos = channel.video.prefetch_related('videokeywordnew')[:50]
         keywords=[]
         
         for video in videos:
@@ -79,7 +74,7 @@ def channelinfo(request,pk):
         keywordCountSerializer=KeywordCountSerializer(keywords,many=True)
         topChannelSubscriberSerializer=ChannelSubscriberSerializer(topChannelSubscriber,many=True)
         channelSerializer = ChannelInfoSerializer(channel)
-        topViewVideoSerializer=VideoSerializer(topViewVideos,many=True)
+        topViewVideoSerializer=VideoSerializer(hottest_videos,many=True)
         subscribernum=topChannelSubscriberSerializer.data[0]['subscriber_num']
         channelinfodict=channelSerializer.data
         channelinfodict['subscriber']=subscribernum
@@ -130,18 +125,11 @@ def channelperioddata(request,pk):
         start=request.query_params.get('start')
         end=request.query_params.get('end')
         if(start and end):
-            videos = channel.video.filter(upload_time__range=(start,end))\
-                .annotate(hottest_video_made_at=Max('videoviews__check_time')) 
-            
-            hottest_videos = VideoViews.objects.filter(
-                check_time__in=[v.hottest_video_made_at for v in videos]
-                ).order_by('-views')[:5]
-            topViewVideos=[]
-            for hv in hottest_videos:
-                topViewVideos.append(hv.video_idx)
-
+            hottest_videos = (channel.video.order_by('-views'))
+            keyword_videos=hottest_videos[:50]
+            hottest_videos=hottest_videos[:5]
             keywords=[]
-            for video in videos:
+            for video in keyword_videos:
                 keyword=[vk.keyword for vk in video.videokeywordnew.all()]
                 keywords.append(keyword)
             keywords=list(itertools.chain(*keywords))
@@ -159,7 +147,7 @@ def channelperioddata(request,pk):
 
 
             keywordCountSerializer=KeywordCountSerializer(keywords,many=True)
-            videoSerializer=VideoSerializer(topViewVideos,many=True)
+            videoSerializer=VideoSerializer(hottest_videos,many=True)
             wordmapItems = keywordCountSerializer.data
             for itemIndex in range(len(wordmapItems)):
                 if itemIndex == 0:
