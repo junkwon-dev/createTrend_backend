@@ -83,15 +83,16 @@ def simple_recommendation(request):
     res=(VideoDocument.search()
          .filter('match', videokeywordnews__keyword=keyword_string)
          .filter('range',upload_time={'gte':'now-30d/d','lt':"now"})
-         .sort({'popularity':"desc"}))
+         .sort({'popularity':"desc"}))[:8]
     idxs=[row.idx for row in res]
     res=[]
     for idx in idxs:
         video=Video.objects.get(pk=idx)
+        channel_name=video.channel_idx.channel_name
         channel_thumbnail_url=video.channel_idx.thumbnail_url
         video_thumbnail_url=video.thumbnail_url
         video_name=video.video_name
-        res.append({"idx":idx,"channel_thumbnail_url":channel_thumbnail_url,"video_thumbnail_url":video_thumbnail_url,"video_name":video_name})
+        res.append({"idx":idx,"channel_name":channel_name,"channel_thumbnail_url":channel_thumbnail_url,"video_thumbnail_url":video_thumbnail_url,"video_name":video_name})
     return Response(res)
 
 @api_view(['GET'])        
@@ -117,17 +118,18 @@ def advanced_recommendation(request):
         .filter("match",videokeywordnews__keyword=keyword_string)
         .exclude("terms",videokeywordnews__keyword=must_not_keyword_list)
         .filter("terms",videokeywordnews__keyword=must_keyword_list)
-        .sort({'popularity':"desc"})
+        .sort({'popularity':"desc"})[:8]
     )
     # .filter("bool",Q("must_not",Q("terms",videokeywordnews__keyword=must_not_keyword_list)))
     idxs=[row.idx for row in res]
     res=[]
     for idx in idxs:
         video=Video.objects.get(pk=idx)
+        channel_name=video.channel_idx.channel_name
         channel_thumbnail_url=video.channel_idx.thumbnail_url
         video_thumbnail_url=video.thumbnail_url
         video_name=video.video_name
-        res.append({"idx":idx,"channel_thumbnail_url":channel_thumbnail_url,"video_thumbnail_url":video_thumbnail_url,"video_name":video_name})
+        res.append({"idx":idx,"channel_name":channel_name,"channel_thumbnail_url":channel_thumbnail_url,"video_thumbnail_url":video_thumbnail_url,"video_name":video_name})
     return Response(res)
 
     
