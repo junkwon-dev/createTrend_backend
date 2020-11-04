@@ -125,7 +125,7 @@ def channelperioddata(request,pk):
         start=request.query_params.get('start')
         end=request.query_params.get('end')
         if(start and end):
-            hottest_videos = (channel.video.order_by('-views'))
+            hottest_videos = (channel.video.filter(upload_time__range=(start,end)).order_by('-views_growth'))
             keyword_videos=hottest_videos[:50]
             hottest_videos=hottest_videos[:5]
             keywords=[]
