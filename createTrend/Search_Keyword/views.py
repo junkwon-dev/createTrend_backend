@@ -23,11 +23,6 @@ from multiprocessing import Manager, Process
 from .documents import VideoDocument
 from elasticsearch_dsl import Q,A
 
-# from Search_Keyword.serializers import topComment
-# Create your views here.
-# class topCommentViewSet(viewsets.ModelViewSet):
-#     queryset = User.objects.all()
-#     serializer_class = UserSerializer
 param_search_hint = openapi.Parameter(
     "search", openapi.IN_QUERY, description="검색하고 싶은 키워드를 입력하세요.", type=openapi.TYPE_STRING,
 )
@@ -39,195 +34,6 @@ class Keyword(object):
         self.value = keyword["value"]
 
 
-# def plus(search, start, end, return_dict, start_time):
-#     end_time = time.time() - start_time
-#     print(f"topVideoSerializer start time : {end_time}")
-
-#     # imagingTransition = dict(
-#     #     Video.objects
-#     #     .filter(
-#     #         videokeywordnew__keyword__regex=rf"(^| +){search}($| +)",
-#     #         upload_time__range=(start, end),
-#     #     )
-#     #     .distinct()
-#     #     .extra(select={"date": "TO_CHAR(upload_time, 'YYYY-MM-DD')"})
-#     #     .order_by("date")
-#     #     .values("date")
-#     #     .annotate(value=Count("idx"))
-#     # )
-#     imagingTransition=(
-#         VideoDocument
-#         .search()
-#         .filter('nested',path='videokeywordnews',query=Q('term', videokeywordnews__keyword=search))
-#         .filter('range',upload_time={'gte':'now-7d/d','lt':"now"})
-#     )
-#     imagingTransition.aggs.bucket('mola',A('date_histogram',field='upload_time',calendar_interval='1d'))
-#     imagingTransition=imagingTransition.execute()
-#     imagingTransitionList=[]
-#     for tag in imagingTransition.aggregations.mola.buckets:
-#         imagingTransitionList.append({'date':tag.key_as_string[:10],'count':tag.doc_count})
-#     popularTransitionQuery = list(
-#         Video.objects.filter(
-#             videokeywordnew__keyword__regex=rf"(^| +){search}($| +)",
-#             upload_time__range=(start, end),
-#             popularity__isnull=False,
-#         )
-#         .distinct()
-#         .extra(select={"date": "TO_CHAR(upload_time, 'YYYY-MM-DD')"})
-#         .order_by("-date")
-#         .values("date")
-#         .annotate(value=Coalesce(Sum("popularity"), 0))
-#     )
-#     popularTransitionQuery=(
-#         VideoDocument
-#         .search()
-#         .filter('nested',path='videokeywordnews',query=Q('term', videokeywordnews__keyword=search))
-#         .filter('range',upload_time={'gte':'now-7d/d','lt':"now"})
-#     )
-#     popularTransitionQuery.aggs.bucket('mola',A('avg',field='upload_time',calendar_interval='1d'))
-#     popularTransitionQuery=popularTransitionQuery.execute()()
-#     popularTransitionQuery=[]
-#     for tag in imagingTransition.aggregations.mola.buckets:
-#         imagingTransitionList.append({'date':tag.key_as_string[:10],'count':tag.doc_count})
-
-#     subscribers = []
-
-#     for subdict in popularTransitionQuery:
-#         subscribers.append({"date": subdict["date"], "value": round(subdict["value"] * 100, 1)})
-
-#     return_dict["imagingTransition"] = imagingTransitionList
-#     return_dict["subscribers"] = subscribers
-
-#     end_time = time.time() - start_time
-#     print(f"plus response time : {end_time}")
-#     print(imagingTransitionList)
-
-
-# def recentVideoSerializer(search, start, end, return_dict, start_time):
-#     end_time = time.time() - start_time
-#     print(f"recentVideoSerializer start time : {end_time}")
-
-#     # recent_video = (
-#     #     Video.objects
-#     #     .filter(
-#     #         videokeywordnew__keyword__regex=rf"(^| +){search}($| +)",
-#     #         upload_time__range=(start, end),
-#     #         views_growth__isnull=False
-#     #     )
-#     #     .distinct()
-#     #     .order_by("-views_growth")[:5]
-#     # )
-#     recent_video=(
-#         VideoDocument
-#         .search()
-#         .filter('term', videokeywordnews__keyword=search)
-#         .filter('range',upload_time={'gte':'now-14d/d','lt':"now"})
-#         .sort({"views_growth":"desc"})[:5]
-#     )
-    
-#     recentVideoSerializer = RecentVideoSerializer(recent_video, many=True)
-#     for video in recentVideoSerializer.data:
-#         video['popularity']=video['popularity']*100
-#     return_dict["recentVideoSerializer_data"] = recentVideoSerializer.data
-#     print(return_dict["recentVideoSerializer_data"])
-
-#     end_time = time.time() - start_time
-#     print(f"recentVideoSerializer response time : {end_time}")
-
-
-# def wordmapItems(search, start, end, return_dict, start_time):
-#     end_time = time.time() - start_time
-#     print(f"wordmapItems start time : {end_time}")
-
-#     # keyword_video = (
-#     #     Video.objects.prefetch_related("videokeywordnew")
-#     #     .filter(
-#     #         videokeywordnew__keyword__regex=rf"(^| +){search}($| +)",
-#     #         upload_time__range=(start, end),
-#     #     )
-#     #     .order_by("-upload_time")[:100]
-#     # )
-#     keyword_video=(
-#         VideoDocument
-#         .search()
-#         .filter('term', videokeywordnews__keyword=search)
-#         .filter('range',upload_time={'gte':'now-14d/d','lt':"now"})
-#         .sort({"upload_time":"desc"})[:100]
-#     )
-#     keywords = []
-#     for video in keyword_video:
-#         keyword = [videokeyword.keyword for videokeyword in video.videokeywordnews]
-#         keywords.append(keyword)
-
-#     keywords = list(itertools.chain(*keywords))
-#     while search in keywords:
-#         keywords.remove(search)
-#     counter = collections.Counter(keywords)
-#     keywords = dict(counter.most_common(n=7))
-#     keywords = [{"name": key, "value": keywords[key]} for key in keywords.keys()]
-#     keywords = [Keyword(keyword=keyword) for keyword in keywords]
-#     keywordCountSerializer = KeywordCountSerializer(keywords, many=True)
-
-#     wordmapItems = keywordCountSerializer.data
-#     # 색깔추가
-#     for itemIndex in range(len(wordmapItems)):
-#         if itemIndex == 0:
-#             wordmapItems[itemIndex].update({"color": "#f9bf69"})
-#         elif itemIndex == 1:
-#             wordmapItems[itemIndex].update({"color": "#f65a5a"})
-#         elif itemIndex == 2:
-#             wordmapItems[itemIndex].update({"color": "#508ddc"})
-#         elif itemIndex == 3:
-#             wordmapItems[itemIndex].update({"color": "#f9bf69"})
-#         elif itemIndex == 4:
-#             wordmapItems[itemIndex].update({"color": "#f65a5a"})
-#         else:
-#             wordmapItems[itemIndex].update({"color": "#508ddc"})
-
-#     return_dict["wordmapItems"] = wordmapItems
-
-#     end_time = time.time() - start_time
-#     print(f"wordmapItems response time : {end_time}")
-
-
-# def topImagingKeywordCountSerializer(search, start, end, return_dict, start_time):
-#     end_time = time.time() - start_time
-#     print(f"topImagingKeywordCountSerializer start time : {end_time}")
-
-#     # imagingTransitionKeyword = list(
-#     #     Video.objects.prefetch_related("videokeywordnew").filter(
-#     #         videokeywordnew__keyword__regex=rf"(^| +){search}($| +)",
-#     #         upload_time__range=(start, end),
-#     #     )
-#     # )
-
-#     imagingTransitionKeyword=(
-#         VideoDocument
-#         .search()
-#         .filter('term', videokeywordnews__keyword=search)
-#         .filter('range',upload_time={'gte':'now-14d/d','lt':"now"})
-#     )
-#     topImagingKeywords = []
-#     for imagingkeywordvideo in imagingTransitionKeyword:
-#         keyword = [
-#             imagingkeywords.keyword for imagingkeywords in imagingkeywordvideo.videokeywordnews
-#         ]
-#         topImagingKeywords.append(keyword)
-#     topImagingKeywords = list(itertools.chain(*topImagingKeywords))
-#     counter = collections.Counter(topImagingKeywords)
-#     topImagingKeywords = dict(counter.most_common(n=10))
-#     topImagingKeywords = [
-#         {"name": key, "value": topImagingKeywords[key]} for key in topImagingKeywords.keys()
-#     ]
-#     topImagingKeywords = [Keyword(keyword=keyword) for keyword in topImagingKeywords]
-
-#     topImagingKeywordCountSerializer = KeywordCountSerializer(topImagingKeywords, many=True)
-
-#     return_dict["topImagingKeywordCountSerializer_data"] = topImagingKeywordCountSerializer.data
-
-#     end_time = time.time() - start_time
-#     print(f"topImagingKeywordCountSerializer response time : {end_time}")
-
 
 @swagger_auto_schema(method="get", manual_parameters=[param_search_hint])
 @api_view(["GET"])
@@ -237,200 +43,169 @@ def keyword(request):
     ---
     검색한 키워드와 관련된 최근 영상과, 인기있는 영상, 관련 키워드 워드맵 정보 등을 제공하는 api입니다.
     """
-    if request.method == "GET":
-        start_time = time.time()
-        search = request.query_params.get("search")
-        if search:
-            start = timezone.now() - datetime.timedelta(days=14)
-            start = start.strftime("%Y-%m-%d")
-            end = timezone.now().strftime("%Y-%m-%d")
-
-
-            # popularTopKeyword = (
-            #     Video.objects.filter(
-            #         videokeywordnew__keyword__regex=rf"(^| +){search}($| +)",
-            #         upload_time__range=(start, end)
-            #     )
-            #     .order_by("-popularity")
-            #     .distinct()
-            #     .prefetch_related("videokeywordnew")[:100]
-            # )
-
-            popularTopKeyword=(
-                VideoDocument
-                .search()
-                .filter('match', videokeywordnews__keyword=search)
-                .filter('range', popularity={'lt':7})
-                .filter('range', upload_time={'gte':'now-14d/d','lt':"now"})
-                .sort({"popularity":"desc"})[:100]
-            )
-            topVideo = popularTopKeyword[:5]
-            topVideoSerializer = TopVideoSerializer(topVideo, many=True)
-            for video in topVideoSerializer.data:
-                video['popularity']=video['popularity']*100
-            topPopularKeywords = []
-            for popularKeyword in popularTopKeyword:
-                # print(popularKeyword.videokeywordnew.all())
-                keyword = [
-                    popkeywords.keyword for popkeywords in popularKeyword.videokeywordnews
-                ]
-                topPopularKeywords.append(keyword)
-            topPopularKeywords = list(itertools.chain(*topPopularKeywords))
-            counter = collections.Counter(topPopularKeywords)
-            topPopularKeywords = dict(counter.most_common(n=10))
-            topPopularKeywords = [
-                {"name": key, "value": topPopularKeywords[key]} for key in topPopularKeywords.keys()
-            ]
-            topPopularKeywords = [Keyword(keyword=keyword) for keyword in topPopularKeywords]
-
-            topkeywordCountSerializer = KeywordCountSerializer(topPopularKeywords, many=True)
-
-            end_time = time.time() - start_time
-            print(f"response time : {end_time}")
-
-            # p1.join()
-            # p2.join()
-            # p3.join()
-            # p4.join()
-
-            end_time = time.time() - start_time
-            print(f"result time : {end_time}")
-            imagingTransition=(
+    start_time = time.time()
+    search = request.query_params.get("search")
+    if search:
+        start = timezone.now() - datetime.timedelta(days=14)
+        start = start.strftime("%Y-%m-%d")
+        end = timezone.now().strftime("%Y-%m-%d")
+        popularTopKeyword=(
             VideoDocument
-                .search()
-                .filter('match', videokeywordnews__keyword=search)
-                .filter('range', popularity={'lt':7})
-                .filter('range',upload_time={'gte':'now-8d/d','lt':"now"})
-            )
-            imagingTransition.aggs.bucket('mola',A('date_histogram',field='upload_time',calendar_interval='1d'))
-            response=imagingTransition.execute()
-            imagingTransitionList=[]
-            # print(response)
-            for tag in response.aggregations.mola.buckets:
-                imagingTransitionList.append({'date':tag.key_as_string[:10],'value':tag.doc_count})
-                
-            
-            # 인기도추이
-            popularTransition=(
-            VideoDocument
-                .search()
-                .filter('match', videokeywordnews__keyword=search)
-                .filter('range',upload_time={'gte':'now-8d/d','lt':"now"})
-            )
-            popularTransition.aggs.bucket('mola',A('date_histogram',field='upload_time',calendar_interval='1d'))\
-                .metric('popularity_per_day', A('avg', field='popularity'))
-            response=popularTransition.execute()
-            popularTransitionList=[]
-            print(response)
-            for tag in response.aggregations.mola.buckets:
-                if tag.popularity_per_day.value is not None:
-                    popularTransitionList.append({'date':tag.key_as_string[:10],'value':tag.popularity_per_day.value*100})  
-                else:
-                    popularTransitionList.append({'date':tag.key_as_string[:10],'value':0})  
-            
-            #워드맵
-            keyword_video=(
-                VideoDocument
-                .search()
-                .filter('match', videokeywordnews__keyword=search)
-                .filter('range',upload_time={'gte':'now-14d/d','lt':"now"})
-                .sort({"upload_time":"desc"})[:100]
-            )
-            keywords = []
-            for video in keyword_video:
-                keyword = [videokeyword.keyword for videokeyword in video.videokeywordnews]
-                keywords.append(keyword)
-
-            keywords = list(itertools.chain(*keywords))
-            while search in keywords:
-                keywords.remove(search)
-            counter = collections.Counter(keywords)
-            keywords = dict(counter.most_common(n=7))
-            keywords = [{"name": key, "value": keywords[key]} for key in keywords.keys()]
-            keywords = [Keyword(keyword=keyword) for keyword in keywords]
-            keywordCountSerializer = KeywordCountSerializer(keywords, many=True)
-
-            wordmapItems = keywordCountSerializer.data
-            # 색깔추가
-            for itemIndex in range(len(wordmapItems)):
-                if itemIndex == 0:
-                    wordmapItems[itemIndex].update({"color": "#f9bf69"})
-                elif itemIndex == 1:
-                    wordmapItems[itemIndex].update({"color": "#f65a5a"})
-                elif itemIndex == 2:
-                    wordmapItems[itemIndex].update({"color": "#508ddc"})
-                elif itemIndex == 3:
-                    wordmapItems[itemIndex].update({"color": "#f9bf69"})
-                elif itemIndex == 4:
-                    wordmapItems[itemIndex].update({"color": "#f65a5a"})
-                else:
-                    wordmapItems[itemIndex].update({"color": "#508ddc"})
-            
-            #최근영상
-            recent_video=(
-                VideoDocument
-                .search()
-                .filter('match', videokeywordnews__keyword=search)
-                .filter('range', popularity={'lt':7})
-                .filter('range',upload_time={'gte':'now-14d/d','lt':"now"})
-                .sort({"views_growth":"desc"})[:5]
-            )
-            
-            recentVideoSerializer = RecentVideoSerializer(recent_video, many=True)
-            for video in recentVideoSerializer.data:
-                video['popularity']=video['popularity']*100
-            
-            
-            # 인기키워드
-            topImagingKeywordQuery=(
-                VideoDocument
-                .search()
-                .filter('match', videokeywordnews__keyword=search)
-                .filter('range',upload_time={'gte':'now-14d/d','lt':"now"})
-            )
-            topImagingKeywords = []
-            for imagingkeywordvideo in topImagingKeywordQuery:
-                keyword = [
-                    imagingkeywords.keyword for imagingkeywords in imagingkeywordvideo.videokeywordnews
-                ]
-                topImagingKeywords.append(keyword)
-            topImagingKeywords = list(itertools.chain(*topImagingKeywords))
-            counter = collections.Counter(topImagingKeywords)
-            topImagingKeywords = dict(counter.most_common(n=10))
-            topImagingKeywords = [
-                {"name": key, "value": topImagingKeywords[key]} for key in topImagingKeywords.keys()
+            .search()
+            .filter('match', videokeywordnews__keyword=search)
+            .filter('range', popularity={'lt':7})
+            .filter('range', upload_time={'gte':'now-14d/d','lt':"now"})
+            .sort({"popularity":"desc"})[:100]
+        )
+        topVideo = popularTopKeyword[:5]
+        topVideoSerializer = TopVideoSerializer(topVideo, many=True)
+        for video in topVideoSerializer.data:
+            video['popularity']=video['popularity']*100
+        topPopularKeywords = []
+        for popularKeyword in popularTopKeyword:
+            # print(popularKeyword.videokeywordnew.all())
+            keyword = [
+                popkeywords.keyword for popkeywords in popularKeyword.videokeywordnews
             ]
-            topImagingKeywords = [Keyword(keyword=keyword) for keyword in topImagingKeywords]
+            topPopularKeywords.append(keyword)
+        topPopularKeywords = list(itertools.chain(*topPopularKeywords))
+        counter = collections.Counter(topPopularKeywords)
+        topPopularKeywords = dict(counter.most_common(n=10))
+        topPopularKeywords = [
+            {"name": key, "value": topPopularKeywords[key]} for key in topPopularKeywords.keys()
+        ]
+        topPopularKeywords = [Keyword(keyword=keyword) for keyword in topPopularKeywords]
+        topkeywordCountSerializer = KeywordCountSerializer(topPopularKeywords, many=True)
+        imagingTransition=(
+        VideoDocument
+            .search()
+            .filter('match', videokeywordnews__keyword=search)
+            .filter('range', popularity={'lt':7})
+            .filter('range',upload_time={'gte':'now-8d/d','lt':"now"})
+        )
+        imagingTransition.aggs.bucket('mola',A('date_histogram',field='upload_time',calendar_interval='1d'))
+        response=imagingTransition.execute()
+        imagingTransitionList=[]
+        for tag in response.aggregations.mola.buckets:
+            imagingTransitionList.append({'date':tag.key_as_string[:10],'value':tag.doc_count})
+        # 인기도추이
+        popularTransition=(
+        VideoDocument
+            .search()
+            .filter('match', videokeywordnews__keyword=search)
+            .filter('range',upload_time={'gte':'now-8d/d','lt':"now"})
+        )
+        popularTransition.aggs.bucket('mola',A('date_histogram',field='upload_time',calendar_interval='1d'))\
+            .metric('popularity_per_day', A('avg', field='popularity'))
+        response=popularTransition.execute()
+        popularTransitionList=[]
+        print(response)
+        for tag in response.aggregations.mola.buckets:
+            if tag.popularity_per_day.value is not None:
+                popularTransitionList.append({'date':tag.key_as_string[:10],'value':tag.popularity_per_day.value*100})
+            else:
+                popularTransitionList.append({'date':tag.key_as_string[:10],'value':0})
 
-            topImagingKeywordCountSerializer = KeywordCountSerializer(topImagingKeywords, many=True)
-            return Response(
-                {
-                    "video": [
-                        {"type": "analysis", "data": recentVideoSerializer.data},
-                        {"type": "aside", "data": topVideoSerializer.data},
-                    ],  # 최신
-                    "wordmap": {
-                        "name": search,
-                        "color": "#666",
-                        "children": wordmapItems,
+        #워드맵
+        keyword_video=(
+            VideoDocument
+            .search()
+            .filter('match', videokeywordnews__keyword=search)
+            .filter('range',upload_time={'gte':'now-14d/d','lt':"now"})
+            .sort({"upload_time":"desc"})[:100]
+        )
+        keywords = []
+        for video in keyword_video:
+            keyword = [videokeyword.keyword for videokeyword in video.videokeywordnews]
+            keywords.append(keyword)
+        keywords = list(itertools.chain(*keywords))
+        while search in keywords:
+            keywords.remove(search)
+        counter = collections.Counter(keywords)
+        keywords = dict(counter.most_common(n=7))
+        keywords = [{"name": key, "value": keywords[key]} for key in keywords.keys()]
+        keywords = [Keyword(keyword=keyword) for keyword in keywords]
+        keywordCountSerializer = KeywordCountSerializer(keywords, many=True)
+        wordmapItems = keywordCountSerializer.data
+        # 색깔추가
+        for itemIndex in range(len(wordmapItems)):
+            if itemIndex == 0:
+                wordmapItems[itemIndex].update({"color": "#f9bf69"})
+            elif itemIndex == 1:
+                wordmapItems[itemIndex].update({"color": "#f65a5a"})
+            elif itemIndex == 2:
+                wordmapItems[itemIndex].update({"color": "#508ddc"})
+            elif itemIndex == 3:
+                wordmapItems[itemIndex].update({"color": "#f9bf69"})
+            elif itemIndex == 4:
+                wordmapItems[itemIndex].update({"color": "#f65a5a"})
+            else:
+                wordmapItems[itemIndex].update({"color": "#508ddc"})
+
+        #최근영상
+        recent_video=(
+            VideoDocument
+            .search()
+            .filter('match', videokeywordnews__keyword=search)
+            .filter('range', popularity={'lt':7})
+            .filter('range',upload_time={'gte':'now-14d/d','lt':"now"})
+            .sort({"views_growth":"desc"})[:5]
+        )
+
+        recentVideoSerializer = RecentVideoSerializer(recent_video, many=True)
+        for video in recentVideoSerializer.data:
+            video['popularity']=video['popularity']*100
+
+
+        # 인기키워드
+        topImagingKeywordQuery=(
+            VideoDocument
+            .search()
+            .filter('match', videokeywordnews__keyword=search)
+            .filter('range',upload_time={'gte':'now-14d/d','lt':"now"})
+        )
+        topImagingKeywords = []
+        for imagingkeywordvideo in topImagingKeywordQuery:
+            keyword = [
+                imagingkeywords.keyword for imagingkeywords in imagingkeywordvideo.videokeywordnews
+            ]
+            topImagingKeywords.append(keyword)
+        topImagingKeywords = list(itertools.chain(*topImagingKeywords))
+        counter = collections.Counter(topImagingKeywords)
+        topImagingKeywords = dict(counter.most_common(n=10))
+        topImagingKeywords = [
+            {"name": key, "value": topImagingKeywords[key]} for key in topImagingKeywords.keys()
+        ]
+        topImagingKeywords = [Keyword(keyword=keyword) for keyword in topImagingKeywords]
+        topImagingKeywordCountSerializer = KeywordCountSerializer(topImagingKeywords, many=True)
+        return Response(
+            {
+                "video": [
+                    {"type": "analysis", "data": recentVideoSerializer.data},
+                    {"type": "aside", "data": topVideoSerializer.data},
+                ],  # 최신
+                "wordmap": {
+                    "name": search,
+                    "color": "#666",
+                    "children": wordmapItems,
+                },
+                "lines": [
+                    {"type": "영상화 추이", "data": imagingTransitionList},
+                    {"type": "인기도 추이", "data": popularTransitionList},
+                ],
+                "keyword": [
+                    {"type": "인기 키워드", "keyword": topkeywordCountSerializer.data},
+                    {
+                        "type": "영상화 키워드",
+                        "keyword": topImagingKeywordCountSerializer.data
                     },
-                    "lines": [
-                        {"type": "영상화 추이", "data": imagingTransitionList},
-                        {"type": "인기도 추이", "data": popularTransitionList},
-                    ],
-                    "keyword": [
-                        {"type": "인기 키워드", "keyword": topkeywordCountSerializer.data},
-                        {
-                            "type": "영상화 키워드",
-                            "keyword": topImagingKeywordCountSerializer.data
-                        },
-                    ],
-                }
-            )
-        else:
-            paginator = PageNumberPagination()
-            paginator.page_size = 10
-            queryset = VideoKeywordNew.objects.all()
-            result_page = paginator.paginate_queryset(queryset, request)
-            serializer = VideoKeywordSerializer(result_page, many=True)
-            return paginator.get_paginated_response(serializer.data)
+                ],
+            }
+        )
+    else:
+        paginator = PageNumberPagination()
+        paginator.page_size = 10
+        queryset = VideoKeywordNew.objects.all()
+        result_page = paginator.paginate_queryset(queryset, request)
+        serializer = VideoKeywordSerializer(result_page, many=True)
+        return paginator.get_paginated_response(serializer.data)
