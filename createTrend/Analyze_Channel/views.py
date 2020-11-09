@@ -1,9 +1,7 @@
-from django.shortcuts import render
 from rest_framework.response import Response
 from rest_framework.decorators import api_view
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
-
 
 from . import functions as f
 
@@ -19,9 +17,6 @@ param_keyword_data_keyword_hint = openapi.Parameter(
     description='검색하고 싶은 키워드를 입력하세요.',
     type=openapi.TYPE_STRING
 )
-
-
-
 
 
 @swagger_auto_schema(method='get', manual_parameters=[param_keyword_data_search_hint, param_keyword_data_keyword_hint])
@@ -50,7 +45,7 @@ def analyze_channel(request):
     전체 채널 중 인기, 영상화 TOP 10 키워드를 제공하는 API입니다.
     '''
     # 인기 키워드 탑10 데이터 추출, 가공 및 직렬화
-    popular_top10_keyword =f.get_popular_top10_keyword()
+    popular_top10_keyword = f.get_popular_top10_keyword()
     # 영상화 키워드 탑10 데이터 추출, 가공 및 직렬화
     imaging_top10_keyword = f.get_imaging_top10_keyword()
     return Response([popular_top10_keyword,

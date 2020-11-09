@@ -6,16 +6,16 @@ from .models import Channel, VideoKeywordNew, Video, ChannelSubscriber, VideoVie
 from .serializers import VideoKeywordSerializer, KeywordCountSerializer, VideoSerializer
 
 
-#키워드객체입니다.
+# 키워드객체입니다.
 class Keyword(object):
     def __init__(self, keyword):
         self.name = keyword['name']
         self.value = keyword['value']
 
 
-#Elasticsearch에 해당 키워드가 영상화 된 최근 7일치 데이터를 일자별로 질의 후 가공, 리스트로 반환하는 함수입니다.
+# Elasticsearch에 해당 키워드가 영상화 된 최근 7일치 데이터를 일자별로 질의 후 가공, 리스트로 반환하는 함수입니다.
 def get_imaging_transition(keyword):
-    #Elasticsearch query입니다.
+    # Elasticsearch query입니다.
     query_imaging_transition = (
         VideoDocument
             .search()
@@ -23,7 +23,7 @@ def get_imaging_transition(keyword):
             .filter('range', popularity={'lt': 7})
             .filter('range', upload_time={'gte': 'now-8d/d', 'lt': "now"})
     )
-    #aggregation bucket 메소드를 이용하여 날짜별로 데이터를 집합(count)합니다.
+    # aggregation bucket 메소드를 이용하여 날짜별로 데이터를 집합(count)합니다.
     query_imaging_transition.aggs.bucket('mola', A('date_histogram', field='upload_time', calendar_interval='1d'))
     response = query_imaging_transition.execute()
     imaging_transition_list = []
@@ -32,7 +32,7 @@ def get_imaging_transition(keyword):
     return imaging_transition_list
 
 
-#추이 비디오의 {인기도, 영상화} 합계를 구하는 함수입니다.
+# 추이 비디오의 {인기도, 영상화} 합계를 구하는 함수입니다.
 def get_video_sum(transition_list):
     video_sum = 0
     for video in transition_list:
@@ -40,8 +40,8 @@ def get_video_sum(transition_list):
     return video_sum
 
 
-#추이 비디오의 {인기도, 영상화} 평균을 구하는 함수입니다.
-def get_video_avg(video_sum,counts_of_video):
+# 추이 비디오의 {인기도, 영상화} 평균을 구하는 함수입니다.
+def get_video_avg(video_sum, counts_of_video):
     try:
         video_avg = video_sum / counts_of_video
     except:
@@ -49,8 +49,8 @@ def get_video_avg(video_sum,counts_of_video):
     return video_avg
 
 
-#Elasticsearch에 질의하는 코드를 묶어논 함수입니다.
-def get_video_documents(keyword,gte,sort_value,video_counts):
+# Elasticsearch에 질의하는 코드를 묶어논 함수입니다.
+def get_video_documents(keyword, gte, sort_value, video_counts):
     if sort_value is not None:
         video_documents = (
             VideoDocument
@@ -69,7 +69,7 @@ def get_video_documents(keyword,gte,sort_value,video_counts):
     return video_documents
 
 
-#직렬화된 word_map data에 색깔을 추가하는 함수입니다.
+# 직렬화된 word_map data에 색깔을 추가하는 함수입니다.
 def add_color_to_keyword(word_map_keywords):
     for item_index in range(len(word_map_keywords)):
         if item_index == 0:
@@ -87,7 +87,7 @@ def add_color_to_keyword(word_map_keywords):
     return word_map_keywords
 
 
-#많은 키워드들 중 counter 모듈을 이용해 가장 많이 등장하는 키워드 6개를 추출하는 함수입니다.
+# 많은 키워드들 중 counter 모듈을 이용해 가장 많이 등장하는 키워드 6개를 추출하는 함수입니다.
 def word_map_keyword_counter(video_documents):
     word_map_keyword = []
     for video_document in video_documents:
@@ -102,31 +102,31 @@ def word_map_keyword_counter(video_documents):
     return word_map_keyword
 
 
-#영상화 키워드 가공 및 직렬화 전체 프로세스를 담당하는 함수입니다.
+# 영상화 키워드 가공 및 직렬화 전체 프로세스를 담당하는 함수입니다.
 def channel_imaging_keyword(keyword):
-    #데이터 요청 및 가공
+    # 데이터 요청 및 가공
     imaging_transition_list = get_imaging_transition(keyword)
     imaging_video_sum = get_video_sum(imaging_transition_list)
     imaging_video_avg = get_video_avg(imaging_video_sum, len(imaging_transition_list))
     video_documents = get_video_documents(keyword=keyword, gte='now-14d/d', sort_value='upload_time', video_counts=500)
     word_map_keyword = word_map_keyword_counter(video_documents)
-    #데이터 직렬화
+    # 데이터 직렬화
     serialized_word_map_keyword = KeywordCountSerializer(word_map_keyword, many=True)
-    top_view_video_documents=get_video_documents(keyword=keyword,gte='now-7d/d',sort_value='views',video_counts=5)
+    top_view_video_documents = get_video_documents(keyword=keyword, gte='now-7d/d', sort_value='views', video_counts=5)
     serialized_views_top5_video = VideoSerializer(top_view_video_documents, many=True)
-    #직렬화된 데이터 색깔추가
+    # 직렬화된 데이터 색깔추가
     word_map_keywords_with_color = add_color_to_keyword(serialized_word_map_keyword.data)
     return Response({"type": "영상", "keyword": [
         {"name": keyword, "popular": imaging_video_avg, "wordmap": {"name": keyword, 'color': '#666',
-                                                             "children": word_map_keywords_with_color},
+                                                                    "children": word_map_keywords_with_color},
          "lines": {'type': "영상화 추이", 'data': imaging_transition_list},
          "video": {"type": "analysis",
                    "data": serialized_views_top5_video.data}}]})
 
 
-#Elasticsearch에 해당 키워드가 영상화 된 최근 7일치 데이터를 일자별로 질의 후 가공, 리스트로 반환하는 함수입니다.
+# Elasticsearch에 해당 키워드가 영상화 된 최근 7일치 데이터를 일자별로 질의 후 가공, 리스트로 반환하는 함수입니다.
 def get_popular_transition(keyword):
-    #Elasticsearch query입니다.
+    # Elasticsearch query입니다.
     query_popular_transition = (
         VideoDocument
             .search()
@@ -148,19 +148,20 @@ def get_popular_transition(keyword):
     return popular_transition_list
 
 
-#인기 키워드 가공 및 직렬화 전체 프로세스를 담당하는 함수입니다.
+# 인기 키워드 가공 및 직렬화 전체 프로세스를 담당하는 함수입니다.
 def channel_popular_keyword(keyword):
-    #데이터 요청 및 가공
+    # 데이터 요청 및 가공
     popular_transition_list = get_popular_transition(keyword)
     popular_video_sum = get_video_sum(popular_transition_list)
     popular_video_avg = get_video_avg(popular_video_sum, len(popular_transition_list))
     video_documents = get_video_documents(keyword=keyword, gte='now-7d/d', sort_value='upload_time', video_counts=500)
     word_map_keyword = word_map_keyword_counter(video_documents)
-    #데이터 직렬화
-    top5_popular_video_documents = get_video_documents(keyword=keyword, gte='now-7d/d', sort_value='popularity', video_counts=5)
+    # 데이터 직렬화
+    top5_popular_video_documents = get_video_documents(keyword=keyword, gte='now-7d/d', sort_value='popularity',
+                                                       video_counts=5)
     serialized_word_map_keyword = KeywordCountSerializer(word_map_keyword, many=True)
     serialized_top5_popular_video = VideoSerializer(top5_popular_video_documents, many=True)
-    #직렬화된 데이터에 색깔 추가
+    # 직렬화된 데이터에 색깔 추가
     word_map_keywords_with_color = add_color_to_keyword(serialized_word_map_keyword.data)
     return Response({"type": "인기", "keyword": [{"name": keyword, "popular": popular_video_avg,
                                                 "wordmap": {"name": keyword, 'color': '#666',
@@ -170,9 +171,9 @@ def channel_popular_keyword(keyword):
                                                           "data": serialized_top5_popular_video.data}}]})
 
 
-#가장 인기가 많았던 10개의 키워드를 추출,가공 및 직렬화하는 함수입니다.
+# 가장 인기가 많았던 10개의 키워드를 추출,가공 및 직렬화하는 함수입니다.
 def get_popular_top10_keyword():
-    #Elasticsearch query입니다.
+    # Elasticsearch query입니다.
     popular_video = (
         VideoDocument
             .search()
@@ -184,7 +185,7 @@ def get_popular_top10_keyword():
             .sort({"popularity": "desc"})[:300]
     )
 
-    #counter 모듈을 이용해 top10 인기 키워드 구하는 과정
+    # counter 모듈을 이용해 top10 인기 키워드 구하는 과정
     popular_keywords = []
     for video in popular_video:
         keyword = [keywords.keyword for keywords in video.videokeywordnews if
@@ -198,15 +199,15 @@ def get_popular_top10_keyword():
     top10_popular_keywords = [{"name": key, "value": top10_popular_keywords[key]} for key in
                               top10_popular_keywords.keys()]
     top10_popular_keywords = [Keyword(keyword=keyword) for keyword in top10_popular_keywords]
-    
-    #데이터 직렬화
+
+    # 데이터 직렬화
     serialized_popular_top10_keyword = KeywordCountSerializer(top10_popular_keywords, many=True)
     return {"type": "인기", "keyword": serialized_popular_top10_keyword.data}
 
 
-#가장 영상화가 많았던 10개의 키워드를 추출,가공 및 직렬화하는 함수입니다.
+# 가장 영상화가 많았던 10개의 키워드를 추출,가공 및 직렬화하는 함수입니다.
 def get_imaging_top10_keyword():
-    #Elasticsearch query입니다.
+    # Elasticsearch query입니다.
     imaging_video = (
         VideoDocument
             .search()
@@ -222,7 +223,7 @@ def get_imaging_top10_keyword():
             .sort({"upload_time": "desc"})[:700]
     )
 
-    #counter 모듈을 이용해 top10 영상화 키워드 구하는 과정
+    # counter 모듈을 이용해 top10 영상화 키워드 구하는 과정
     top10_imaging_keywords = []
     for video in imaging_video:
         keyword = [keywords.keyword for keywords in video.videokeywordnews if
@@ -233,9 +234,10 @@ def get_imaging_top10_keyword():
     counter = collections.Counter(top10_imaging_keywords)
     top10_imaging_keywords = dict(counter.most_common(n=10))
 
-    top10_imaging_keywords = [{"name": key, "value": top10_imaging_keywords[key]} for key in top10_imaging_keywords.keys()]
+    top10_imaging_keywords = [{"name": key, "value": top10_imaging_keywords[key]} for key in
+                              top10_imaging_keywords.keys()]
     top10_imaging_keywords = [Keyword(keyword=keyword) for keyword in top10_imaging_keywords]
-    
-    #데이터 직렬화
+
+    # 데이터 직렬화
     serialized_imaging_top10_keyword = KeywordCountSerializer(top10_imaging_keywords, many=True)
     return {"type": "영상화", "keyword": serialized_imaging_top10_keyword.data}
