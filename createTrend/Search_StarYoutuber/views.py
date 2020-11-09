@@ -18,27 +18,36 @@ from drf_yasg.utils import swagger_auto_schema
 import collections, itertools, datetime
 
 
+class Keyword(object):
+    def __init__(self, keyword):
+        self.name = keyword['name']
+        self.value = keyword['value']
+
 @api_view(['GET'])
-def channelinfo(request, pk):
+def channel_info(request, pk):
     '''
     채널 정보 API
     ---
     해당되는 채널의 정보, 채널을 분석해서 제공하는 API입니다.
     '''
+
+    # 채널 객체가 없으면 404 response
     try:
         channel = Channel.objects \
             .get(pk=pk)
     except Channel.DoesNotExist:
         return Response(status=status.HTTP_404_NOT_FOUND)
 
+    # 해달 채널의 비디오를 일자별로 묶음
     videos = channel.video \
         .annotate(hottest_video_made_at=Max('videoviews__check_time'))
     hottest_videos = channel.video.order_by('-views')[:5]
-    topChannelSubscriber = channel.channelsubscriber \
+
+    channel_subscriber = channel.channelsubscriber \
                                .order_by('-check_time')[:1]
     videos = channel.video.prefetch_related('videokeywordnew')[:50]
     keywords = []
-    for video in videos:
+    for video in videos.iterator():
         keyword = [vk.keyword for vk in video.videokeywordnew.all()]
         keywords.append(keyword)
     channel_name = channel.channel_name
@@ -58,21 +67,21 @@ def channelinfo(request, pk):
     start = timezone.now() - datetime.timedelta(days=50)
     start = start.strftime("%Y-%m-%d")
     end = timezone.now().strftime("%Y-%m-%d")
-    channelSubscribers = list(
+    channel_subscribers = list(
         channel.channelsubscriber.filter(check_time__range=(start, end)).order_by('check_time'))
-    ChannelSubscriber = []
-    for channelSubscirber in channelSubscribers:
-        date = channelSubscirber.check_time
-        value = channelSubscirber.subscriber_num
+    channel_subscriber_transition = []
+    for channel_subscirber in channel_subscribers:
+        date = channel_subscirber.check_time
+        value = channel_subscirber.subscriber_num
         date_value = str(date)[:10]
-        ChannelSubscriber.append({"date": date_value, "value": value})
+        channel_subscriber_transition.append({"date": date_value, "value": value})
     keywordCountSerializer = KeywordCountSerializer(keywords, many=True)
-    topChannelSubscriberSerializer = ChannelSubscriberSerializer(topChannelSubscriber, many=True)
+    serialized_channel_subscriber = ChannelSubscriberSerializer(channel_subscriber, many=True)
     channelSerializer = ChannelInfoSerializer(channel)
     topViewVideoSerializer = VideoSerializer(hottest_videos, many=True)
-    subscribernum = topChannelSubscriberSerializer.data[0]['subscriber_num']
+    subscriber_number = serialized_channel_subscriber.data[0]['subscriber_num']
     channelinfodict = channelSerializer.data
-    channelinfodict['subscriber'] = subscribernum
+    channelinfodict['subscriber'] = subscriber_number
     wordmapItems = keywordCountSerializer.data
     for itemIndex in range(len(wordmapItems)):
         if itemIndex == 0:
@@ -90,7 +99,7 @@ def channelinfo(request, pk):
     return Response({'channelInfo': channelinfodict, 'video': {"type": "aside", "data": topViewVideoSerializer.data} \
                         , 'keyword': {'pie': keywordCountSerializer.data},
                      'wordmap': {'name': channel_name, 'color': '#666', 'children': wordmapItems},
-                     'line': {"type": "구독자수 추이", "data": ChannelSubscriber}})
+                     'line': {"type": "구독자수 추이", "data": channel_subscriber_transition}})
 
 
 param_channelperioddata_start_hint = openapi.Parameter(
@@ -110,7 +119,7 @@ param_channelperioddata_end_hint = openapi.Parameter(
 @swagger_auto_schema(method='get',
                      manual_parameters=[param_channelperioddata_start_hint, param_channelperioddata_end_hint])
 @api_view(['GET'])
-def channelperioddata(request, pk):
+def channel_period_data(request, pk):
     '''
     채널의 기간 내 DATA API
     ---
@@ -139,12 +148,6 @@ def channelperioddata(request, pk):
             counter = collections.Counter(keywords)
             keywords = dict(counter.most_common(n=7))
             keywords = [{"name": key, "value": keywords[key]} for key in keywords.keys()]
-
-            class Keyword(object):
-                def __init__(self, keyword):
-                    self.name = keyword['name']
-                    self.value = keyword['value']
-
             keywords = [Keyword(keyword=keyword) for keyword in keywords]
 
             keywordCountSerializer = KeywordCountSerializer(keywords, many=True)
@@ -176,7 +179,7 @@ def channelperioddata(request, pk):
 
 
 @api_view(['GET'])
-def channellist(request):
+def channel_list(request):
     '''
     채널리스트 API
     ---
