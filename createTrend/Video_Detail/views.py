@@ -5,15 +5,22 @@ from rest_framework import viewsets, status
 from django.utils import timezone
 from datetime import datetime, timedelta
 import datetime, itertools, collections, time
-
+from drf_yasg.utils import swagger_auto_schema
 from django.db.models import Avg
 from rest_framework.decorators import api_view
 from .serializers import VideoViewsSerializer, VideoSerializer, ChannelSerializer
 ##전체평균인기도(일주일) 전체평균조회수(일주일) 해당동영상 조회수(일주일) 
 
 # Create your views here.
+
 @api_view(['GET'])
 def videoDetail(request,pk):
+    '''
+    상세 비디오 정보 API
+    ---
+    해당되는 비디오의 정보를 분석해서 제공하는 API입니다.
+    '''
+
     try:
         video = Video.objects\
             .get(pk=pk)
