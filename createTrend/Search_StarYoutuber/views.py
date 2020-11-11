@@ -46,6 +46,8 @@ def channel_info(request, pk):
     channel_subscriber = channel.channelsubscriber \
                                .order_by('-check_time')[:1]
     videos = channel.video.prefetch_related('videokeywordnew')[:50]
+
+    # 워드맵 데이터 추출
     keywords = []
     for video in videos.iterator():
         keyword = [vk.keyword for vk in video.videokeywordnew.all()]
@@ -75,6 +77,8 @@ def channel_info(request, pk):
         value = channel_subscirber.subscriber_num
         date_value = str(date)[:10]
         channel_subscriber_transition.append({"date": date_value, "value": value})
+
+    # 데이터 직렬화
     keywordCountSerializer = KeywordCountSerializer(keywords, many=True)
     serialized_channel_subscriber = ChannelSubscriberSerializer(channel_subscriber, many=True)
     channelSerializer = ChannelInfoSerializer(channel)
@@ -83,6 +87,8 @@ def channel_info(request, pk):
     channelinfodict = channelSerializer.data
     channelinfodict['subscriber'] = subscriber_number
     wordmapItems = keywordCountSerializer.data
+
+    #워드맵 데이터 색 추가
     for itemIndex in range(len(wordmapItems)):
         if itemIndex == 0:
             wordmapItems[itemIndex].update({'color': '#f9bf69'})
@@ -134,10 +140,13 @@ def channel_period_data(request, pk):
         start = request.query_params.get('start')
         end = request.query_params.get('end')
         if (start and end):
+            # 기간 내의 데이터를 조회수 급상승으로 정렬해서 조회수 급상승 영상을 추출한다.
             hottest_videos = (channel.video.filter(upload_time__range=(start, end)).order_by('-views_growth'))
             keyword_videos = hottest_videos[:50]
             hottest_videos = hottest_videos[:5]
             keywords = []
+
+            # 워드맵 데이터 추출
             for video in keyword_videos:
                 keyword = [vk.keyword for vk in video.videokeywordnew.all()]
                 keywords.append(keyword)
@@ -150,9 +159,12 @@ def channel_period_data(request, pk):
             keywords = [{"name": key, "value": keywords[key]} for key in keywords.keys()]
             keywords = [Keyword(keyword=keyword) for keyword in keywords]
 
+            # 직렬화
             keywordCountSerializer = KeywordCountSerializer(keywords, many=True)
             videoSerializer = VideoSerializer(hottest_videos, many=True)
             wordmapItems = keywordCountSerializer.data
+
+            # 워드맵 데이터 색 추가
             for itemIndex in range(len(wordmapItems)):
                 if itemIndex == 0:
                     wordmapItems[itemIndex].update({'color': '#f9bf69'})
@@ -188,12 +200,16 @@ def channel_list(request):
     youtuber_name = request.query_params.get('youtuber_name')
 
     if youtuber_name is not None:
+        # 유튜버 검색 기능
         paginator = PageNumberPagination()
         paginator.page_size = 10
         channel_querysets = list(Channel.objects.prefetch_related('video', 'channelviews').filter(
             channel_name__icontains=youtuber_name).order_by('-subscriber_num'))
-        # youtuber_keyword_queryset = Channel.objects.filter(l)
+
+        # 데이터 많을 시 페이지네이션 진행(페이지별로 데이터 끊기)
         result_page = paginator.paginate_queryset(channel_querysets, request)
+
+        # 데이터 직렬화
         serializer = ChannelListSerializer(result_page, many=True)
         result = serializer.data
         additional_data = []

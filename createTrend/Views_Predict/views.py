@@ -46,6 +46,8 @@ def videoViewsPredict(request):
         channel_subscriber = request.data["channel_subscriber"]
         upload_date = request.data["upload_date"]
         print(thumbnail_url, video_name, channel_subscriber, upload_date)
+        
+        # RabbitMQ 메시지 큐에 연결하여 AI서버와 데이터 주고받는 소스
         if thumbnail_url and video_name and channel_subscriber and upload_date:
 
             credentials = pika.PlainCredentials("muna", "muna112358!")
@@ -154,8 +156,11 @@ def advanced_recommendation(request):
     ---
     조회수 예측에 추천되는 영상들을 상세 검색하는 API입니다.
     '''
+    # 검색할 키워드
     keyword_string = request.query_params.get("keyword_string")
+    # 꼭 들어가야 할 키워드
     must_keyword = request.query_params.get("must_keyword")
+    # 제외시킬 키워드
     must_not_keyword = request.query_params.get("must_not_keyword")
     must_keyword_list = []
     must_not_keyword_list = []
@@ -170,6 +175,7 @@ def advanced_recommendation(request):
     except:
         pass
 
+    # 키워드 검색
     res = (
         VideoDocument.search()
             .filter("match", videokeywordnews__keyword=keyword_string)
@@ -177,7 +183,8 @@ def advanced_recommendation(request):
             .filter("terms", videokeywordnews__keyword=must_keyword_list)
             .sort({'popularity': "desc"})[:8]
     )
-    # .filter("bool",Q("must_not",Q("terms",videokeywordnews__keyword=must_not_keyword_list)))
+    
+    # 해당 비디오의 채널 가져와서 채널 썸네일과 채널 이름 추출
     idxs = [row.idx for row in res]
     res = []
     for idx in idxs:

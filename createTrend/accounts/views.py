@@ -12,6 +12,11 @@ from .serializers import CreateUserSerializer, UserSerializer, LoginUserSerializ
 # Create your views here.
 
 class RegistrationAPI(generics.GenericAPIView):
+    '''
+        회원 가입 API
+        ---
+        회원 가입을 할 때 사용하는 API입니다.
+    '''
     serializer_class = CreateUserSerializer
 
     def post(self, request, *args, **kwargs):
@@ -32,6 +37,11 @@ class RegistrationAPI(generics.GenericAPIView):
 
 
 class LoginAPI(generics.GenericAPIView):
+    '''
+            로그인 API
+            ---
+            로그인을 할 때 사용하는 API입니다.
+        '''
     serializer_class = LoginUserSerializer
 
     def post(self, request, *args, **kwargs):
@@ -57,6 +67,11 @@ class UserAPI(generics.RetrieveAPIView):
 
 
 class UserInfoUpdateAPI(generics.UpdateAPIView):
+    '''
+        사용자 정보 업데이트 API
+        ---
+        사용자의 상세 정보를 기입하거나, 정보를 업데이트 할 때 사용하는 API입니다.
+    '''
     model = User
     permission_classes = [permissions.IsAuthenticated]
     serializer_class = UserInfoSerializer
